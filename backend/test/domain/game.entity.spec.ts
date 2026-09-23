@@ -60,7 +60,7 @@ describe('Game Entity', () => {
     const res = game.executeAction(Action.ADVANCE); // (2,0) -> Pit / Trou!
 
     expect(res.status).toBe(GameStatus.LOST);
-    expect(res.message).toContain('trou');
+    expect(res.message).toContain('puit!');
   });
 
   it('should lose if stepping into alive Wumpus', () => {
@@ -98,6 +98,6 @@ describe('Game Entity', () => {
     // 3. Sortie!
     const winRes = game.executeAction(Action.EXIT);
     expect(winRes.status).toBe(GameStatus.WON);
-    expect(winRes.message).toContain('GANADO');
+    expect(winRes.message).toContain('GAGNÉ!');
   });
 });
