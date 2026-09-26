@@ -9,6 +9,8 @@ export class GamePresenter {
     return {
       gameId: game.id,
       boardSize: game.board.size,
+      pitCount: game.board.pits.length,
+      arrows: game.player.initialArrows,
       status: game.status,
       perceptions: [...game.lastPerceptions],
       playerState: this.toPlayerState(game),

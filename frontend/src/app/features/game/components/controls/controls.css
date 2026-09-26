@@ -16,17 +16,28 @@
   gap: 0.5rem;
 }
 
-.top-row {
+.dpad-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.dpad-row {
   display: flex;
   justify-content: center;
   width: 100%;
 }
 
-.bottom-row {
-  display: flex;
-  justify-content: center;
+.dpad-row.middle {
   gap: 0.5rem;
-  width: 100%;
+}
+
+.ctrl-btn.dir-btn {
+  max-width: 100px;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(79, 70, 229, 0.25) 100%);
 }
 
 .control-group.actions {

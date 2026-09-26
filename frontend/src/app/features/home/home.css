@@ -121,6 +121,29 @@
   box-shadow: 0 15px 25px -5px rgba(99, 102, 241, 0.5);
 }
 
+.start-button:disabled {
+  background: #334155;
+  color: #64748b;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.error-banner {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.error-banner p {
+  margin: 0.25rem 0;
+}
+
 .history-section {
   text-align: left;
 }

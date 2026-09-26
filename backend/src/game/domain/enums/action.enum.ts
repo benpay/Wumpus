@@ -1,8 +1,9 @@
 /* Actions possibles de l'archer */
 export enum Action {
-  ADVANCE = 'ADVANCE',
-  ROTATE_LEFT = 'ROTATE_LEFT',
-  ROTATE_RIGHT = 'ROTATE_RIGHT',
+  MOVE_NORTH = 'MOVE_NORTH',
+  MOVE_SOUTH = 'MOVE_SOUTH',
+  MOVE_EAST = 'MOVE_EAST',
+  MOVE_WEST = 'MOVE_WEST',
   SHOOT = 'SHOOT',
   EXIT = 'EXIT',
 }

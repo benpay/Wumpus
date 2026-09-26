@@ -78,43 +78,35 @@ export class Game {
     let message = '';
 
     switch (action) {
-      case Action.ADVANCE: {
-        const nextPos = this.player.getNextPosition();
-        if (!this.board.isWithinBounds(nextPos)) {
-          currentTurnPerceptions.push(Perception.BUMP);
-          message = "Vous avez essayé d'avancer mais vous avez choqué vers le mur.";
-        } else {
-          this.player.moveTo(nextPos);
-          this.recordVisited(nextPos);
-
-          if (this.board.hasPit(nextPos)) {
-            this.status = GameStatus.LOST;
-            message = "Vous êtes tombé dans un puit! Vous avez perdu la partie.";
-          } else if (this.board.hasWumpus(nextPos) && this.board.isWumpusAlive) {
-            this.status = GameStatus.LOST;
-            message = "Le Wumpus vous a devoré! Vous avez perdu la partie.";
-          } else {
-            if (this.board.hasGold(nextPos) && !this.player.hasGold) {
-              this.player.pickUpGold();
-              this.board.pickUpGold();
-              message = "Vous avez trouvé et pris l'or!";
-            } else {
-              message = `Vous avez avancé à la case (${nextPos.x}, ${nextPos.y}).`;
-            }
-          }
-        }
+      case Action.MOVE_NORTH: {
+        this.player.direction = Direction.NORTH;
+        const result = this.doAdvance();
+        currentTurnPerceptions.push(...result.perceptions);
+        message = result.message;
         break;
       }
 
-      case Action.ROTATE_LEFT: {
-        this.player.rotateLeft();
-        message = `Vous avez tourné à gauche. Vous regardez vers le ${this.player.direction}.`;
+      case Action.MOVE_SOUTH: {
+        this.player.direction = Direction.SOUTH;
+        const result = this.doAdvance();
+        currentTurnPerceptions.push(...result.perceptions);
+        message = result.message;
         break;
       }
 
-      case Action.ROTATE_RIGHT: {
-        this.player.rotateRight();
-        message = `Vous avez tourné à droite. Vous regardez vers le ${this.player.direction}.`;
+      case Action.MOVE_EAST: {
+        this.player.direction = Direction.EAST;
+        const result = this.doAdvance();
+        currentTurnPerceptions.push(...result.perceptions);
+        message = result.message;
+        break;
+      }
+
+      case Action.MOVE_WEST: {
+        this.player.direction = Direction.WEST;
+        const result = this.doAdvance();
+        currentTurnPerceptions.push(...result.perceptions);
+        message = result.message;
         break;
       }
 
@@ -159,6 +151,36 @@ export class Game {
     this.lastPerceptions = currentTurnPerceptions;
     this.lastMessage = message;
     this.logs.push(`Tour ${this.turns}: ${message}`);
+  }
+
+  private doAdvance(): { perceptions: Perception[]; message: string } {
+    const perceptions: Perception[] = [];
+    let message = '';
+    const nextPos = this.player.getNextPosition();
+    if (!this.board.isWithinBounds(nextPos)) {
+      perceptions.push(Perception.BUMP);
+      message = "Vous avez essayé d'avancer mais vous avez choqué vers le mur.";
+    } else {
+      this.player.moveTo(nextPos);
+      this.recordVisited(nextPos);
+
+      if (this.board.hasPit(nextPos)) {
+        this.status = GameStatus.LOST;
+        message = "Vous êtes tombé dans un puit! Vous avez perdu la partie.";
+      } else if (this.board.hasWumpus(nextPos) && this.board.isWumpusAlive) {
+        this.status = GameStatus.LOST;
+        message = "Le Wumpus vous a devoré! Vous avez perdu la partie.";
+      } else {
+        if (this.board.hasGold(nextPos) && !this.player.hasGold) {
+          this.player.pickUpGold();
+          this.board.pickUpGold();
+          message = "Vous avez trouvé et pris l'or!";
+        } else {
+          message = `Vous avez avancé à la case (${nextPos.x}, ${nextPos.y}).`;
+        }
+      }
+    }
+    return { perceptions, message };
   }
 
   private checkArrowHit(): boolean {

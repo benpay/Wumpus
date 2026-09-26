@@ -11,12 +11,15 @@ export class Player {
   position: Position;
   direction: Direction;
   arrows: number;
+  /** Flèches qui lancent la partie : `arrows` descend lorsque vous tirez. */
+  readonly initialArrows: number;
   hasGold: boolean = false;
 
   constructor(config: PlayerConfig) {
     this.position = { ...config.initialPosition };
     this.direction = config.initialDirection ?? Direction.NORTH;
     this.arrows = config.arrows ?? 1;
+    this.initialArrows = this.arrows;
   }
 
   rotateLeft(): void {

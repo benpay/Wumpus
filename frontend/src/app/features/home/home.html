@@ -25,8 +25,14 @@
         </div>
       </div>
 
-      <button (click)="startGame()" class="start-button">
-        <span>🏹 Commencer l'Aventure</span>
+      <div class="error-banner" *ngIf="configErrors.length > 0 || errorMessage" role="alert">
+        <p *ngFor="let error of configErrors">⚠️ {{ error }}</p>
+        <p *ngIf="configErrors.length === 0 && errorMessage">⚠️ {{ errorMessage }}</p>
+      </div>
+
+      <button (click)="startGame()" class="start-button" [disabled]="!canStartGame">
+        <span *ngIf="!creatingGame">🏹 Commencer l'Aventure</span>
+        <span *ngIf="creatingGame">⏳ Création en cours...</span>
       </button>
     </div>
 

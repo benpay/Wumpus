@@ -6,6 +6,8 @@ import { PlayerStateDto } from './player-state.dto.js';
 export class GameStateDto {
   gameId!: string;
   boardSize!: number;
+  pitCount!: number;
+  arrows!: number;
   status!: GameStatus;
   perceptions!: Perception[];
   playerState!: PlayerStateDto;

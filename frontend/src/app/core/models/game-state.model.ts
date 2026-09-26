@@ -20,7 +20,11 @@ export interface GameState {
   turns: number;
   visitedPositions: Position[];
   boardSize: number;
+  /** Les paramètres utilisés pour créer le jeu, afin qu'il puisse être recréé exactement à l'identique. */
+  pitCount: number;
+  arrows: number;
   message: string;
+  logs: string[];
 }
 
 export interface GameRecord {

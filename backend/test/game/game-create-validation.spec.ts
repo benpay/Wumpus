@@ -18,6 +18,8 @@ describe('POST /games (validation)', () => {
     (): GameStateDto => ({
       gameId: 'game-1',
       boardSize: 4,
+      pitCount: 2,
+      arrows: 1,
       status: GameStatus.PLAYING,
       perceptions: [],
       playerState: {

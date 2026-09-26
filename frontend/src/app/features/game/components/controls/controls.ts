@@ -28,18 +28,22 @@ export class ControlsComponent {
     switch (event.code) {
       case 'ArrowUp':
       case 'KeyW':
-        this.emit(Action.ADVANCE);
+        this.emit(Action.MOVE_NORTH);
+        break;
+      case 'ArrowDown':
+      case 'KeyS':
+        this.emit(Action.MOVE_SOUTH);
         break;
       case 'ArrowLeft':
       case 'KeyA':
-        this.emit(Action.ROTATE_LEFT);
+        this.emit(Action.MOVE_WEST);
         break;
       case 'ArrowRight':
       case 'KeyD':
-        this.emit(Action.ROTATE_RIGHT);
+        this.emit(Action.MOVE_EAST);
         break;
       case 'Space':
-      case 'KeyS':
+      case 'KeyF':
         this.emit(Action.SHOOT);
         break;
       case 'KeyE':

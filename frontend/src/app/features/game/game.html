@@ -14,6 +14,16 @@
 
   <!-- Jeu vue -->
   <div *ngIf="!loading && gameState" class="game-layout">
+    <!-- Bannière de déconnexion WS -->
+    <div *ngIf="!isConnected" class="offline-banner">
+      ⚡ Connexion interrompue avec le serveur. Reconnexion en cours...
+    </div>
+
+    <!-- Notification d'erreur WS -->
+    <div *ngIf="wsError" class="ws-error-toast">
+      ⚠️ {{ wsError }}
+    </div>
+
     <!-- Barre d'état -->
     <header class="status-bar">
       <div class="left-controls">

@@ -53,6 +53,35 @@ describe('GameService', () => {
     expect(state.playerState.position).toEqual(created.playerState.position);
   });
 
+  describe('configuration de la partie', () => {
+    it('should expose the requested pitCount and arrows', () => {
+      const state = service.createGame({ boardSize: 5, pitCount: 3, arrows: 4 });
+
+      expect(state.pitCount).toBe(3);
+      expect(state.arrows).toBe(4);
+    });
+
+    it('should fall back to the defaults when no configuration is given', () => {
+      const state = service.createGame({});
+
+      expect(state.pitCount).toBe(2);
+      expect(state.arrows).toBe(1);
+    });
+
+    it('should keep arrows as the initial count after shooting', async () => {
+      const created = service.createGame({ arrows: 3 });
+      const afterShoot = await service.executeAction({
+        gameId: created.gameId,
+        action: Action.SHOOT,
+      });
+
+      // El DTO expone las flechas con las que se creó la partida...
+      expect(afterShoot.arrows).toBe(3);
+      // ...mientras que playerState.arrows son las que quedan.
+      expect(afterShoot.playerState.arrows).toBe(2);
+    });
+  });
+
   it('should retrieve a created game by ID', () => {
     const created = service.createGame({ boardSize: 5 });
     const game = service.getGame(created.gameId);
