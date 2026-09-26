@@ -25,8 +25,8 @@ export class GameGateway {
     @MessageBody() dto: GameActionDto,
     @ConnectedSocket() client: Socket,
   ) {
-    const result = await this.gameService.executeAction(dto);
-    client.emit('gameStateUpdate', result);
-    return result;
+    const state = await this.gameService.executeAction(dto);
+    client.emit('gameStateUpdate', state);
+    return state;
   }
 }

@@ -10,12 +10,15 @@ describe('GameGateway', () => {
   let service: GameService;
 
   const mockActionResult = {
+    gameId: 'game-123',
+    boardSize: 4,
     status: GameStatus.PLAYING,
     perceptions: [],
     playerState: { position: { x: 0, y: 1 }, direction: 'NORTH', arrows: 1, hasGold: false },
     message: 'Avanzaste',
     turns: 1,
     visitedPositions: [{ x: 0, y: 0 }, { x: 0, y: 1 }],
+    logs: ['Log 1', 'Tour 1: Avanzaste'],
   };
 
   const mockGameService = {
@@ -52,5 +55,13 @@ describe('GameGateway', () => {
     expect(service.executeAction).toHaveBeenCalledWith(dto);
     expect(mockClientSocket.emit).toHaveBeenCalledWith('gameStateUpdate', mockActionResult);
     expect(res).toEqual(mockActionResult);
+  });
+
+  it('should forward the gameId so the client can filter its own updates', async () => {
+    const dto = { gameId: 'game-123', action: Action.ADVANCE };
+    const state = await gateway.handleGameAction(dto, mockClientSocket);
+
+    expect(state.gameId).toBe(dto.gameId);
+    expect(state.boardSize).toBe(4);
   });
 });

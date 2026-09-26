@@ -3,6 +3,7 @@ import { Direction } from '../enums/direction.enum.js';
 import { GameStatus } from '../enums/game-status.enum.js';
 import { Perception } from '../enums/perception.enum.js';
 import { Position } from '../interfaces/position.interface.js';
+import { DEFAULT_ARROWS, DEFAULT_BOARD_SIZE, DEFAULT_PIT_COUNT } from '../game-rules.js';
 import { Board, BoardConfig } from './board.entity.js';
 import { Player, PlayerConfig } from './player.entity.js';
 
@@ -10,20 +11,6 @@ export interface GameConfig {
   id: string;
   boardConfig: BoardConfig;
   playerConfig: PlayerConfig;
-}
-
-export interface GameActionResult {
-  status: GameStatus;
-  perceptions: Perception[];
-  playerState: {
-    position: Position;
-    direction: Direction;
-    arrows: number;
-    hasGold: boolean;
-  };
-  message: string;
-  turns: number;
-  visitedPositions: Position[];
 }
 
 export class Game {
@@ -35,6 +22,7 @@ export class Game {
   turns: number = 0;
   visitedPositions: Position[] = [];
   lastPerceptions: Perception[] = [];
+  lastMessage: string = '';
   logs: string[] = [];
 
   constructor(config: GameConfig) {
@@ -44,14 +32,15 @@ export class Game {
     this.startPosition = { ...config.playerConfig.initialPosition };
     this.visitedPositions.push({ ...this.startPosition });
     this.lastPerceptions = this.board.getPerceptionsAt(this.player.position);
-    this.logs.push(`La partie commence en la case (${this.startPosition.x}, ${this.startPosition.y}).`);
+    this.lastMessage = `La partie commence en la case (${this.startPosition.x}, ${this.startPosition.y}).`;
+    this.logs.push(this.lastMessage);
   }
 
   static createGame(
     id: string,
-    size: number = 4,
-    pitCount: number = 2,
-    arrows: number = 1,
+    size: number = DEFAULT_BOARD_SIZE,
+    pitCount: number = DEFAULT_PIT_COUNT,
+    arrows: number = DEFAULT_ARROWS,
     startPosition?: Position,
   ): Game {
     // Si on n'a pas de position de départ, on en génère une aléatoire
@@ -78,9 +67,10 @@ export class Game {
     });
   }
 
-  executeAction(action: Action): GameActionResult {
+  executeAction(action: Action): void {
     if (this.status !== GameStatus.PLAYING) {
-      return this.buildResult('La partie est déjà terminée.');
+      this.lastMessage = 'La partie est déjà terminée.';
+      return;
     }
 
     this.turns++;
@@ -167,9 +157,8 @@ export class Game {
     }
 
     this.lastPerceptions = currentTurnPerceptions;
+    this.lastMessage = message;
     this.logs.push(`Tour ${this.turns}: ${message}`);
-
-    return this.buildResult(message);
   }
 
   private checkArrowHit(): boolean {
@@ -201,21 +190,5 @@ export class Game {
     if (!this.visitedPositions.some((p) => Board.isSamePosition(p, pos))) {
       this.visitedPositions.push({ ...pos });
     }
-  }
-
-  private buildResult(message: string): GameActionResult {
-    return {
-      status: this.status,
-      perceptions: [...this.lastPerceptions],
-      playerState: {
-        position: { ...this.player.position },
-        direction: this.player.direction,
-        arrows: this.player.arrows,
-        hasGold: this.player.hasGold,
-      },
-      message,
-      turns: this.turns,
-      visitedPositions: this.visitedPositions.map((p) => ({ ...p })),
-    };
   }
 }

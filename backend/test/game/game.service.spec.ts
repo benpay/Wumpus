@@ -2,12 +2,12 @@ import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Action } from '../../src/game/domain/enums/action.enum.js';
 import { GameStatus } from '../../src/game/domain/enums/game-status.enum.js';
+import { GamePresenter } from '../../src/game/game.presenter.js';
 import { GameService } from '../../src/game/game.service.js';
 import { PersistenceService } from '../../src/persistence/persistence.service.js';
 
 describe('GameService', () => {
   let service: GameService;
-  let persistenceService: PersistenceService;
 
   const mockPersistenceService = {
     saveGameRecord: vi.fn().mockResolvedValue({}),
@@ -19,6 +19,7 @@ describe('GameService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GameService,
+        GamePresenter,
         {
           provide: PersistenceService,
           useValue: mockPersistenceService,
@@ -27,7 +28,6 @@ describe('GameService', () => {
     }).compile();
 
     service = module.get<GameService>(GameService);
-    persistenceService = module.get<PersistenceService>(PersistenceService);
   });
 
   it('should be defined', () => {
@@ -41,6 +41,16 @@ describe('GameService', () => {
     expect(res.status).toBe(GameStatus.PLAYING);
     expect(res.boardSize).toBe(4);
     expect(res.turns).toBe(0);
+    expect(res.message).toContain('La partie commence');
+  });
+
+  it('should expose the game state through getGameState', () => {
+    const created = service.createGame({ boardSize: 5 });
+    const state = service.getGameState(created.gameId);
+
+    expect(state.gameId).toBe(created.gameId);
+    expect(state.boardSize).toBe(5);
+    expect(state.playerState.position).toEqual(created.playerState.position);
   });
 
   it('should retrieve a created game by ID', () => {

@@ -1,8 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PersistenceService } from '../persistence/persistence.service.js';
+import { GamePresenter } from './game.presenter.js';
+import { GameStateDto } from './dto/game-state.dto.js';
 import { Game } from './domain/entities/game.entity.js';
 import { GameStatus } from './domain/enums/game-status.enum.js';
+import {
+  DEFAULT_ARROWS,
+  DEFAULT_BOARD_SIZE,
+  DEFAULT_PIT_COUNT,
+} from './domain/game-rules.js';
 import { CreateGameDto } from './dto/create-game.dto.js';
 import { GameActionDto } from './dto/game-action.dto.js';
 
@@ -10,32 +17,21 @@ import { GameActionDto } from './dto/game-action.dto.js';
 export class GameService {
   private games = new Map<string, Game>();
 
-  constructor(private readonly persistenceService: PersistenceService) { }
+  constructor(
+    private readonly persistenceService: PersistenceService,
+    private readonly presenter: GamePresenter,
+  ) { }
 
-  createGame(dto: CreateGameDto) {
+  createGame(dto: CreateGameDto): GameStateDto {
     const gameId = randomUUID();
-    const size = dto.boardSize ?? 4;
-    const pitCount = dto.pitCount ?? 2;
-    const arrows = dto.arrows ?? 1;
+    const size = dto.boardSize ?? DEFAULT_BOARD_SIZE;
+    const pitCount = dto.pitCount ?? DEFAULT_PIT_COUNT;
+    const arrows = dto.arrows ?? DEFAULT_ARROWS;
 
     const game = Game.createGame(gameId, size, pitCount, arrows);
     this.games.set(gameId, game);
 
-    return {
-      gameId: game.id,
-      status: game.status,
-      perceptions: game.lastPerceptions,
-      playerState: {
-        position: game.player.position,
-        direction: game.player.direction,
-        arrows: game.player.arrows,
-        hasGold: game.player.hasGold,
-      },
-      turns: game.turns,
-      visitedPositions: game.visitedPositions,
-      boardSize: game.board.size,
-      message: game.logs[0] ?? 'La partie commence!',
-    };
+    return this.presenter.toState(game);
   }
 
   getGame(gameId: string): Game {
@@ -46,17 +42,21 @@ export class GameService {
     return game;
   }
 
-  async executeAction(dto: GameActionDto) {
-    const game = this.getGame(dto.gameId);
-    const result = game.executeAction(dto.action);
+  getGameState(gameId: string): GameStateDto {
+    return this.presenter.toState(this.getGame(gameId));
+  }
 
-    if (result.status !== GameStatus.PLAYING) {
+  async executeAction(dto: GameActionDto): Promise<GameStateDto> {
+    const game = this.getGame(dto.gameId);
+    game.executeAction(dto.action);
+
+    if (game.status !== GameStatus.PLAYING) {
       await this.persistenceService.saveGameRecord(game).catch((err) => {
         console.error("Erreur lors de sauvegarde la partie dans la base de données: ", err);
       });
     }
 
-    return result;
+    return this.presenter.toState(game);
   }
 
   async getGameHistory() {

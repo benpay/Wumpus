@@ -18,15 +18,15 @@ describe('GameController', () => {
       boardSize: 4,
       message: 'Comienza la partida',
     }),
-    getGame: vi.fn().mockReturnValue({
-      id: 'game-123',
+    getGameState: vi.fn().mockReturnValue({
+      gameId: 'game-123',
       status: GameStatus.PLAYING,
-      lastPerceptions: [],
-      player: { position: { x: 0, y: 0 }, direction: 'NORTH', arrows: 1, hasGold: false },
+      perceptions: [],
+      playerState: { position: { x: 0, y: 0 } },
       turns: 0,
       visitedPositions: [{ x: 0, y: 0 }],
-      board: { size: 4 },
-      logs: ['Log 1'],
+      boardSize: 4,
+      message: 'Comienza la partida',
     }),
     getGameHistory: vi.fn().mockResolvedValue([]),
   };
@@ -58,7 +58,7 @@ describe('GameController', () => {
 
   it('should get game details by ID', () => {
     const res = controller.getGame('game-123');
-    expect(service.getGame).toHaveBeenCalledWith('game-123');
+    expect(service.getGameState).toHaveBeenCalledWith('game-123');
     expect(res.gameId).toBe('game-123');
   });
 

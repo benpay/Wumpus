@@ -100,11 +100,24 @@ export class Board {
 
   // Génération d'un plateau aléatoire
   static generateRandomBoard(size: number, pitCount: number, startPosition: Position): Board {
-    const availableCells: Position[] = [];
+    // La sortie, le Wumpus et l'or occupent 3 cases : c'est la limite logique,
+    // indépendamment des limites de l'API.
+    const availableCells = size * size - 1;
+    const maxPits = availableCells - 2;
+    if (maxPits < 0) {
+      throw new Error(`Une grotte de ${size}x${size} est trop petite pour contenir la sortie, le Wumpus et l'or.`);
+    }
+    if (pitCount < 0 || pitCount > maxPits) {
+      throw new Error(
+        `Impossible de placer ${pitCount} puits dans une grotte de ${size}x${size} : maximum ${maxPits}.`,
+      );
+    }
+
+    const freeCells: Position[] = [];
     for (let x = 0; x < size; x++) {
       for (let y = 0; y < size; y++) {
         if (!Board.isSamePosition({ x, y }, startPosition)) {
-          availableCells.push({ x, y });
+          freeCells.push({ x, y });
         }
       }
     }
@@ -122,13 +135,12 @@ export class Board {
       return copy;
     };
 
-    const shuffled = shuffle(availableCells);
+    const shuffled = shuffle(freeCells);
     const wumpusPosition = shuffled.pop()!;
     const goldPosition = shuffled.pop()!;
 
-    const actualPitCount = Math.min(pitCount, shuffled.length);
     const pits: Position[] = [];
-    for (let i = 0; i < actualPitCount; i++) {
+    for (let i = 0; i < pitCount; i++) {
       pits.push(shuffled.pop()!);
     }
 

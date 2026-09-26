@@ -76,4 +76,33 @@ describe('Board Entity', () => {
     expect(Board.isSamePosition(randomBoard.goldPosition, start)).toBe(false);
     expect(randomBoard.pits.some((p) => Board.isSamePosition(p, start))).toBe(false);
   });
+
+  describe('generateRandomBoard viability', () => {
+    it('should place the maximum number of pits without overlapping', () => {
+      // 3x3 => 9 cases - 1 sortie - 1 wumpus - 1 or = 6 puits
+      const randomBoard = Board.generateRandomBoard(3, 6, { x: 0, y: 0 });
+      const occupied = [
+        { x: 0, y: 0 },
+        randomBoard.wumpusPosition,
+        randomBoard.goldPosition,
+        ...randomBoard.pits,
+      ];
+      expect(randomBoard.pits).toHaveLength(6);
+      expect(new Set(occupied.map((p) => `${p.x},${p.y}`)).size).toBe(9);
+    });
+
+    it('should refuse more pits than the board can hold', () => {
+      // Avant la garde, ce cas produisait un plateau corrompu (wumpus/or/puits "undefined").
+      expect(() => Board.generateRandomBoard(3, 7, { x: 0, y: 0 })).toThrow(
+        'Impossible de placer 7 puits dans une grotte de 3x3 : maximum 6.',
+      );
+    });
+
+    it('should refuse a board too small to hold the exit, the Wumpus and the gold', () => {
+      // 1x1 : aucune case libre pour le Wumpus et l'or.
+      expect(() => Board.generateRandomBoard(1, 0, { x: 0, y: 0 })).toThrow(
+        "Une grotte de 1x1 est trop petite pour contenir la sortie, le Wumpus et l'or.",
+      );
+    });
+  });
 });
