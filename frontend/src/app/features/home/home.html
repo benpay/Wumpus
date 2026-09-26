@@ -1,0 +1,65 @@
+<div class="home-container">
+  <div class="hero-card">
+    <div class="title-badge">🎮 MONDE DE WUMPUS</div>
+    <h1 class="main-title">Le Monde du Wumpus</h1>
+    <p class="subtitle">Entre dans la grotte sombre, évite les gouffres sans fond, bats le redoutable Wumpus et échappe
+      avec l'or.</p>
+
+    <div class="config-section">
+      <h2 class="section-title">⚙️ Configuration de la Grotte</h2>
+
+      <div class="input-grid">
+        <div class="form-group">
+          <label for="boardSize">Taille de la Grotte (N x N)</label>
+          <input id="boardSize" type="number" min="3" max="10" [(ngModel)]="boardSize" class="custom-input" />
+        </div>
+
+        <div class="form-group">
+          <label for="pitCount">Nombre de Gouffres</label>
+          <input id="pitCount" type="number" min="1" max="10" [(ngModel)]="pitCount" class="custom-input" />
+        </div>
+
+        <div class="form-group">
+          <label for="arrows">Nombre de Flèches</label>
+          <input id="arrows" type="number" min="1" max="5" [(ngModel)]="arrows" class="custom-input" />
+        </div>
+      </div>
+
+      <button (click)="startGame()" class="start-button">
+        <span>🏹 Commencer l'Aventure</span>
+      </button>
+    </div>
+
+    <div class="history-section">
+      <h2 class="section-title">📜 Historique des Parties</h2>
+
+      <div *ngIf="loadingHistory" class="loading-state">
+        <div class="spinner"></div>
+        <p>Chargement de l'historique...</p>
+      </div>
+
+      <div *ngIf="!loadingHistory && history.length === 0" class="empty-state">
+        <p>Aucune partie n'est encore enregistrée dans PostgreSQL.</p>
+      </div>
+
+      <div *ngIf="!loadingHistory && history.length > 0" class="history-list">
+        <div *ngFor="let item of history" class="history-card" [class.won]="item.status === 'WON'"
+          [class.lost]="item.status === 'LOST'">
+          <div class="history-header">
+            <span class="status-badge" [class.won]="item.status === 'WON'">
+              {{ item.status === 'WON' ? '🏆 VICTOIRE' : '💀 DÉFAITE' }}
+            </span>
+            <span class="date">{{ item.createdAt | date:'short' }}</span>
+          </div>
+          <div class="history-details">
+            <span>Grotte: {{ item.boardSize }}x{{ item.boardSize }}</span>
+            <span>Tours: {{ item.turns }}</span>
+            <span> gouffres: {{ item.pitCount }}</span>
+            <span>Or: {{ item.hasGold ? 'Oui 🪙' : 'Non' }}</span>
+            <span>Wumpus Mort: {{ item.wumpusKilled ? 'Oui 🏹' : 'Non' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

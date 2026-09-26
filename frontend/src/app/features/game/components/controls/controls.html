@@ -1,0 +1,38 @@
+<div class="controls-panel">
+  <div class="control-group movement">
+    <div class="top-row">
+      <button (click)="emit(Action.ADVANCE)" [disabled]="disabled" class="ctrl-btn advance"
+        title="Avancez 1 case (Flèche Haut / W)">
+        <span>⬆️</span>
+        <span class="btn-label">Avancez</span>
+      </button>
+    </div>
+
+    <div class="bottom-row">
+      <button (click)="emit(Action.ROTATE_LEFT)" [disabled]="disabled" class="ctrl-btn rotate"
+        title="Tournez gauche (Flèche gauche / A)">
+        <span>🔄 ⬅️</span>
+        <span class="btn-label">Tournez gauche</span>
+      </button>
+
+      <button (click)="emit(Action.ROTATE_RIGHT)" [disabled]="disabled" class="ctrl-btn rotate"
+        title="Tournez droite (Flèche droite / D)">
+        <span>🔄 ➡️</span>
+        <span class="btn-label">Tournez droite</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="control-group actions">
+    <button (click)="emit(Action.SHOOT)" [disabled]="disabled" class="ctrl-btn shoot"
+      title="Tirez une flèche (Espace / S)">
+      <span>🏹</span>
+      <span class="btn-label">Tirez une flèche</span>
+    </button>
+
+    <button (click)="emit(Action.EXIT)" [disabled]="disabled" class="ctrl-btn exit" title="Quittez la grotte (E)">
+      <span>🚪</span>
+      <span class="btn-label">Quittez la grotte</span>
+    </button>
+  </div>
+</div>

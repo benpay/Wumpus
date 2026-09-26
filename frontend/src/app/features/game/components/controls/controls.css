@@ -1,0 +1,95 @@
+.controls-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.25rem;
+  backdrop-filter: blur(12px);
+}
+
+.control-group.movement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.top-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.bottom-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.control-group.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ctrl-btn {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  flex: 1;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.ctrl-btn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.3);
+  border-color: #6366f1;
+  transform: translateY(-2px);
+}
+
+.ctrl-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.ctrl-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ctrl-btn.advance {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(79, 70, 229, 0.3) 100%);
+  max-width: 220px;
+}
+
+.ctrl-btn.shoot {
+  border-color: rgba(234, 179, 8, 0.4);
+}
+
+.ctrl-btn.shoot:hover:not(:disabled) {
+  background: rgba(234, 179, 8, 0.25);
+  border-color: #eab308;
+}
+
+.ctrl-btn.exit {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.ctrl-btn.exit:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: #10b981;
+}
+
+.btn-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}

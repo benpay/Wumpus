@@ -1,0 +1,77 @@
+<div class="game-page">
+  <!-- Charger l'état -->
+  <div *ngIf="loading" class="center-state">
+    <div class="spinner"></div>
+    <p>Chargement de la grotte du Wumpus...</p>
+  </div>
+
+  <!-- Erreur state -->
+  <div *ngIf="error" class="center-state error">
+    <h2>⚠️ Erreur</h2>
+    <p>{{ error }}</p>
+    <button (click)="goHome()" class="btn-primary">Retour au menu principal</button>
+  </div>
+
+  <!-- Jeu vue -->
+  <div *ngIf="!loading && gameState" class="game-layout">
+    <!-- Barre d'état -->
+    <header class="status-bar">
+      <div class="left-controls">
+        <button (click)="goHome()" class="back-btn">⬅️ Menu Principal</button>
+        <span class="game-id-badge">ID: {{ gameState.gameId.substring(0, 8) }}</span>
+      </div>
+
+      <div class="stats-group">
+        <div class="stat-item" title="Tours écoulés">
+          <span class="stat-icon">⏳</span>
+          <span class="stat-value">Tour {{ gameState.turns }}</span>
+        </div>
+
+        <div class="stat-item" title="Flèche(s) restante(s)">
+          <span class="stat-icon">🏹</span>
+          <span class="stat-value">{{ gameState.playerState.arrows }} Flèche(s)</span>
+        </div>
+
+        <div class="stat-item" title="Lingot d'or">
+          <span class="stat-icon">🪙</span>
+          <span class="stat-value">{{ gameState.playerState.hasGold ? '¡Recherché!' : 'Non récupéré' }}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Grille de contenu principal -->
+    <main class="main-content">
+      <!-- Grille du jeu -->
+      <section class="board-section">
+        <app-board [boardSize]="gameState.boardSize" [playerState]="gameState.playerState"
+          [visitedPositions]="gameState.visitedPositions" [perceptions]="gameState.perceptions"></app-board>
+      </section>
+
+      <!-- Panel Latéral (Contrôles et Journal) -->
+      <aside class="side-panel">
+        <app-controls [disabled]="gameState.status !== GameStatus.PLAYING"
+          (actionSelected)="onActionSelected($event)"></app-controls>
+
+        <app-log [message]="gameState.message"></app-log>
+      </aside>
+    </main>
+
+    <!-- Fenêtre modale de fin de partie / Banner -->
+    <div *ngIf="gameState.status !== GameStatus.PLAYING" class="modal-overlay">
+      <div class="modal-card" [class.won]="gameState.status === GameStatus.WON"
+        [class.lost]="gameState.status === GameStatus.LOST">
+        <div class="modal-icon">
+          {{ gameState.status === GameStatus.WON ? '🏆' : '💀' }}
+        </div>
+
+        <h2>{{ gameState.status === GameStatus.WON ? '¡TU AS GAGNÉ!' : '¡ GAME OVER!' }}</h2>
+        <p class="modal-msg">{{ gameState.message }}</p>
+
+        <div class="modal-actions">
+          <button (click)="newGame()" class="btn-primary">Nouvelle Partie</button>
+          <button (click)="goHome()" class="btn-secondary">Menu Principal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,38 @@
+<div class="board-container">
+  <div class="grid-layout" [style.grid-template-columns]="'repeat(' + boardSize + ', 1fr)'">
+    <ng-container *ngFor="let row of grid">
+      <div *ngFor="let cell of row" class="cell" [class.visited]="cell.isVisited" [class.unvisited]="!cell.isVisited"
+        [class.player-cell]="cell.isPlayerHere">
+        <span class="cell-coords">({{ cell.x }}, {{ cell.y }})</span>
+
+        <!-- Contenue quand la case est explorée -->
+        <div *ngIf="cell.isVisited" class="cell-content">
+          <!-- Joueur -->
+          <div *ngIf="cell.isPlayerHere" class="player-avatar">
+            <span class="hunter-icon">🤖</span>
+            <span class="direction-arrow">{{ getDirectionSymbol(playerState.direction) }}</span>
+          </div>
+
+          <!-- Badges de percepciones -->
+          <div *ngIf="cell.isPlayerHere && cell.perceptions.length > 0" class="perceptions-badges">
+            <span *ngIf="hasPerception(cell, Perception.STENCH)" class="badge stench" title="Odeur du Wumpus">🦨
+              Odeur</span>
+            <span *ngIf="hasPerception(cell, Perception.BREEZE)" class="badge breeze" title="Sifflement de Pozo">💨
+              Sifflement</span>
+            <span *ngIf="hasPerception(cell, Perception.GLIMMER)" class="badge glimmer" title="Brillo de Oro">✨
+              Brillo</span>
+            <span *ngIf="hasPerception(cell, Perception.BUMP)" class="badge bump" title="Choc contre mur">💥
+              Choc</span>
+            <span *ngIf="hasPerception(cell, Perception.SCREAM)" class="badge scream" title="Cri du Wumpus">😱
+              Cri</span>
+          </div>
+        </div>
+
+        <!-- Brouillard de guerre (inexploré) -->
+        <div *ngIf="!cell.isVisited" class="fog-of-war">
+          <span class="fog-icon">🌫️</span>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
