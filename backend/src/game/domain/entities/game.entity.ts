@@ -14,6 +14,14 @@ export interface GameConfig {
 }
 
 export class Game {
+  /** Article + nom de direction pour les messages : « le nord » ou « l'est » */
+  private static readonly DIRECTION_LABEL: Record<Direction, string> = {
+    [Direction.NORTH]: 'le nord',
+    [Direction.SOUTH]: 'le sud',
+    [Direction.EAST]: "l'est",
+    [Direction.WEST]: "l'ouest",
+  };
+
   readonly id: string;
   readonly board: Board;
   readonly player: Player;
@@ -73,51 +81,53 @@ export class Game {
       return;
     }
 
-    this.turns++;
     let currentTurnPerceptions: Perception[] = [];
     let message = '';
+    // Un tour ne se compte que si le joueur a réellement parcouru une case.
+    let turnConsumed = false;
 
     switch (action) {
       case Action.ADVANCE: {
         const result = this.doAdvance();
         currentTurnPerceptions.push(...result.perceptions);
         message = result.message;
+        turnConsumed = result.moved;
         break;
       }
 
       case Action.ORIENT_NORTH: {
         this.player.direction = Direction.NORTH;
-        message = `Vous regardez maintenant vers le ${Direction.NORTH}.`;
+        message = `Vous regardez maintenant vers ${Game.DIRECTION_LABEL[Direction.NORTH]}.`;
         break;
       }
 
       case Action.ORIENT_SOUTH: {
         this.player.direction = Direction.SOUTH;
-        message = `Vous regardez maintenant vers le ${Direction.SOUTH}.`;
+        message = `Vous regardez maintenant vers ${Game.DIRECTION_LABEL[Direction.SOUTH]}.`;
         break;
       }
 
       case Action.ORIENT_EAST: {
         this.player.direction = Direction.EAST;
-        message = `Vous regardez maintenant vers le ${Direction.EAST}.`;
+        message = `Vous regardez maintenant vers ${Game.DIRECTION_LABEL[Direction.EAST]}.`;
         break;
       }
 
       case Action.ORIENT_WEST: {
         this.player.direction = Direction.WEST;
-        message = `Vous regardez maintenant vers le ${Direction.WEST}.`;
+        message = `Vous regardez maintenant vers ${Game.DIRECTION_LABEL[Direction.WEST]}.`;
         break;
       }
 
       case Action.ROTATE_LEFT: {
         this.player.rotateLeft();
-        message = `Vous avez tourné à gauche. Vous regardez vers le ${this.player.direction}.`;
+        message = `Vous avez tourné à gauche. Vous regardez vers ${Game.DIRECTION_LABEL[this.player.direction]}.`;
         break;
       }
 
       case Action.ROTATE_RIGHT: {
         this.player.rotateRight();
-        message = `Vous avez tourné à droite. Vous regardez vers le ${this.player.direction}.`;
+        message = `Vous avez tourné à droite. Vous regardez vers ${Game.DIRECTION_LABEL[this.player.direction]}.`;
         break;
       }
 
@@ -151,6 +161,10 @@ export class Game {
       }
     }
 
+    if (turnConsumed) {
+      this.turns++;
+    }
+
     // Ajouter les perceptions environnementales de la case actuelle
     const cellPerceptions = this.board.getPerceptionsAt(this.player.position);
     for (const p of cellPerceptions) {
@@ -161,12 +175,15 @@ export class Game {
 
     this.lastPerceptions = currentTurnPerceptions;
     this.lastMessage = message;
-    this.logs.push(`Tour ${this.turns}: ${message}`);
+    // Seul un déplacement porte un numéro de tour : une rotation ou un tir
+    // appartiennent au tour en cours, ils n'en ouvrent pas un nouveau.
+    this.logs.push(turnConsumed ? `Tour ${this.turns}: ${message}` : message);
   }
 
-  private doAdvance(): { perceptions: Perception[]; message: string } {
+  private doAdvance(): { moved: boolean; perceptions: Perception[]; message: string } {
     const perceptions: Perception[] = [];
     let message = '';
+    let moved = false;
     const nextPos = this.player.getNextPosition();
     if (!this.board.isWithinBounds(nextPos)) {
       perceptions.push(Perception.BUMP);
@@ -174,6 +191,7 @@ export class Game {
     } else {
       this.player.moveTo(nextPos);
       this.recordVisited(nextPos);
+      moved = true;
 
       if (this.board.hasPit(nextPos)) {
         this.status = GameStatus.LOST;
@@ -192,7 +210,7 @@ export class Game {
         }
       }
     }
-    return { perceptions, message };
+    return { moved, perceptions, message };
   }
 
   private checkArrowHit(): boolean {

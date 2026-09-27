@@ -9,10 +9,10 @@ import { GameState } from '../../core/models/game-state.model';
 import { Action, Direction, GameStatus } from '../../core/models/enums';
 
 describe('GameComponent', () => {
-  let createGame: ReturnType<typeof vi.fn>;
-  let getGame: ReturnType<typeof vi.fn>;
-  let sendAction: ReturnType<typeof vi.fn>;
-  let routerNavigate: ReturnType<typeof vi.fn>;
+  let createGame: jasmine.Spy;
+  let getGame: jasmine.Spy;
+  let sendAction: jasmine.Spy;
+  let routerNavigate: jasmine.Spy;
   let gameStatePush: Subject<GameState>;
   let connectionError: ReturnType<typeof signal<string | null>>;
 
@@ -41,10 +41,10 @@ describe('GameComponent', () => {
   beforeEach(async () => {
     gameStatePush = new Subject<GameState>();
     connectionError = signal<string | null>(null);
-    createGame = vi.fn().mockReturnValue(of(state({ gameId: 'game-2' })));
-    getGame = vi.fn().mockReturnValue(of(state()));
-    sendAction = vi.fn();
-    routerNavigate = vi.fn();
+    createGame = jasmine.createSpy().and.returnValue(of(state({ gameId: 'game-2' })));
+    getGame = jasmine.createSpy().and.returnValue(of(state()));
+    sendAction = jasmine.createSpy();
+    routerNavigate = jasmine.createSpy();
 
     await TestBed.configureTestingModule({
       imports: [GameComponent],
@@ -91,7 +91,7 @@ describe('GameComponent', () => {
 
       game.newGame();
 
-      expect(routerNavigate).toHaveBeenCalledWith(['/game', 'game-2'], expect.anything());
+      expect(routerNavigate).toHaveBeenCalledWith(['/game', 'game-2'], jasmine.anything());
     });
 
     it('utilise la configuration par défaut si aucune partie n\'est chargée', () => {
@@ -104,7 +104,7 @@ describe('GameComponent', () => {
     });
 
     it('affiche une erreur si la création de la partie échoue', () => {
-      createGame.mockReturnValue(throwError(() => new Error('boom')));
+      createGame.and.returnValue(throwError(() => new Error('boom')));
       const game = component();
       game.gameState.set(state());
 
@@ -149,7 +149,7 @@ describe('GameComponent', () => {
 
     it('ne déclenche pas l\'éclat si l\'or était déjà ramassé avant la mise à jour', () => {
       const conOro = state({ playerState: { ...state().playerState, hasGold: true } });
-      getGame.mockReturnValue(of(conOro));
+      getGame.and.returnValue(of(conOro));
       const game = component();
 
       gameStatePush.next(state({ ...conOro, turns: 1 }));
@@ -158,7 +158,7 @@ describe('GameComponent', () => {
     });
 
     it('ne rejoue pas l\'éclat au chargement d\'une partie qui a déjà l\'or', () => {
-      getGame.mockReturnValue(
+      getGame.and.returnValue(
         of(state({ playerState: { ...state().playerState, hasGold: true } })),
       );
       const game = component();
@@ -166,7 +166,7 @@ describe('GameComponent', () => {
       expect(game.goldFlash()).toBe(false);
     });
 
-    it('dispara la alarma al matar al Wumpus', () => {
+    it('déclenche l\'alarme en cas de mort du Wumpus', () => {
       const game = component();
       expect(game.wumpusFlash()).toBe(false);
 

@@ -32,30 +32,30 @@ describe('BoardComponent', () => {
 
   it('construit une grille boardSize x boardSize', () => {
     const board = createBoard(4, playerState, [{ x: 0, y: 0 }]);
-    expect(board.grid).toHaveLength(4);
-    expect(board.grid[0]).toHaveLength(4);
+    expect(board.grid).toHaveSize(4);
+    expect(board.grid[0]).toHaveSize(4);
   });
 
-  it('coloca (0,0) en la esquina inferior izquierda', () => {
+  it('place (0,0) dans le coin inférieur gauche', () => {
     const board = createBoard(4, playerState, []);
     // La première fila del DOM es y = size - 1
-    expect(board.grid[0][0]).toMatchObject({ x: 0, y: 3 });
-    expect(board.grid[3][0]).toMatchObject({ x: 0, y: 0 });
+    expect(board.grid[0][0]).toEqual(jasmine.objectContaining({ x: 0, y: 3 }));
+    expect(board.grid[3][0]).toEqual(jasmine.objectContaining({ x: 0, y: 0 }));
   });
 
-  it('marca comme visitées les cases parcourues', () => {
+  it('marque comme visitées les cases parcourues', () => {
     const board = createBoard(4, playerState, [
       { x: 0, y: 0 },
       { x: 1, y: 1 },
     ]);
     const flat = board.grid.flat();
-    expect(flat.filter((c) => c.isVisited)).toHaveLength(2);
+    expect(flat.filter((c) => c.isVisited)).toHaveSize(2);
     expect(flat.find((c) => c.x === 1 && c.y === 1)?.isVisited).toBe(true);
   });
 
   it('marque la case du joueur', () => {
     const board = createBoard(4, playerState, []);
-    expect(board.grid.flat().filter((c) => c.isPlayerHere)).toHaveLength(1);
+    expect(board.grid.flat().filter((c) => c.isPlayerHere)).toHaveSize(1);
   });
 
   it('n\'affiche les perceptions que sur la case du joueur', () => {
@@ -64,7 +64,7 @@ describe('BoardComponent', () => {
       Perception.BREEZE,
     ]);
     const withPerceptions = board.grid.flat().filter((c) => c.perceptions.length > 0);
-    expect(withPerceptions).toHaveLength(1);
+    expect(withPerceptions).toHaveSize(1);
     expect(withPerceptions[0].isPlayerHere).toBe(true);
     expect(board.hasPerception(withPerceptions[0], Perception.STENCH)).toBe(true);
     expect(board.hasPerception(withPerceptions[0], Perception.GLIMMER)).toBe(false);
@@ -77,11 +77,11 @@ describe('BoardComponent', () => {
     fixture.componentRef.setInput('visitedPositions', []);
     fixture.componentRef.setInput('perceptions', []);
     fixture.detectChanges();
-    expect(fixture.componentInstance.grid).toHaveLength(3);
+    expect(fixture.componentInstance.grid).toHaveSize(3);
 
     fixture.componentRef.setInput('boardSize', 5);
     fixture.detectChanges();
-    expect(fixture.componentInstance.grid).toHaveLength(5);
+    expect(fixture.componentInstance.grid).toHaveSize(5);
   });
 
   it('expose un symbole pour chaque direction', () => {

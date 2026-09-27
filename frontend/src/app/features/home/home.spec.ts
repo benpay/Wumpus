@@ -7,16 +7,16 @@ import { GameApiService } from '../../core/services/game-api.service';
 import { GameState } from '../../core/models/game-state.model';
 
 describe('HomeComponent', () => {
-  let createGame: ReturnType<typeof vi.fn>;
-  let getGameHistory: ReturnType<typeof vi.fn>;
-  let routerNavigate: ReturnType<typeof vi.fn>;
+  let createGame: jasmine.Spy;
+  let getGameHistory: jasmine.Spy;
+  let routerNavigate: jasmine.Spy;
 
   const state = { gameId: 'game-1' } as GameState;
 
   beforeEach(async () => {
-    createGame = vi.fn().mockReturnValue(of(state));
-    getGameHistory = vi.fn().mockReturnValue(of([]));
-    routerNavigate = vi.fn();
+    createGame = jasmine.createSpy().and.returnValue(of(state));
+    getGameHistory = jasmine.createSpy().and.returnValue(of([]));
+    routerNavigate = jasmine.createSpy();
 
     await TestBed.configureTestingModule({
       imports: [HomeComponent],
@@ -63,7 +63,7 @@ describe('HomeComponent', () => {
       expect(createGame).toHaveBeenCalledWith({ boardSize: 4, pitCount: 2, arrows: 1 });
       expect(routerNavigate).toHaveBeenCalledWith(
         ['/game', 'game-1'],
-        expect.objectContaining({ state: expect.anything() }),
+        jasmine.objectContaining({ state: jasmine.anything() }),
       );
       expect(home.errorMessage()).toBeNull();
       expect(home.creatingGame()).toBe(false);
@@ -80,7 +80,7 @@ describe('HomeComponent', () => {
     });
 
     it('affiche le message du 400 renvoyé par le backend', () => {
-      createGame.mockReturnValue(
+      createGame.and.returnValue(
         throwError(
           () =>
             new HttpErrorResponse({
@@ -97,8 +97,8 @@ describe('HomeComponent', () => {
       expect(routerNavigate).not.toHaveBeenCalled();
     });
 
-    it('avisa si el backend está apagado', () => {
-      createGame.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
+    it('avis si le backend est indisponible', () => {
+      createGame.and.returnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
       const home = component();
       home.startGame();
 
@@ -108,17 +108,17 @@ describe('HomeComponent', () => {
 
   describe('historique', () => {
     it('affiche l\'historique renvoyé par l\'API', () => {
-      getGameHistory.mockReturnValue(
+      getGameHistory.and.returnValue(
         of([{ id: 'a', status: 'WON', turns: 12 } as never]),
       );
       const home = component();
 
       expect(home.loadingHistory()).toBe(false);
-      expect(home.history()).toHaveLength(1);
+      expect(home.history()).toHaveSize(1);
     });
 
     it('ne bloque pas l\'écran si l\'historique échoue', () => {
-      getGameHistory.mockReturnValue(throwError(() => new Error('db down')));
+      getGameHistory.and.returnValue(throwError(() => new Error('db down')));
       const home = component();
 
       expect(home.loadingHistory()).toBe(false);

@@ -145,4 +145,66 @@ describe('Game Entity', () => {
     expect(game.player.position).toEqual({ x: 2, y: 0 });
     expect(game.lastMessage).toBe('La partie est déjà terminée.');
   });
+
+  it('should count one turn per cell moved, not per action', () => {
+    game.executeAction(Action.ORIENT_NORTH);
+    game.executeAction(Action.ADVANCE); // (0,1) : 1re case parcourue
+    expect(game.turns).toBe(1);
+
+    game.executeAction(Action.ORIENT_SOUTH);
+    game.executeAction(Action.ADVANCE); // (0,0) : 2e case parcourue
+    expect(game.turns).toBe(2);
+
+    game.executeAction(Action.ORIENT_WEST);
+    game.executeAction(Action.ADVANCE); // (-1,0) : mur, aucune case parcourue
+    expect(game.turns).toBe(2);
+
+    game.executeAction(Action.ORIENT_NORTH);
+    game.executeAction(Action.ADVANCE); // (0,1) : deja visitee, mais parcourue
+    expect(game.turns).toBe(3);
+  });
+
+  it('should not consume a turn when changing direction', () => {
+    game.executeAction(Action.ORIENT_NORTH);
+    game.executeAction(Action.ORIENT_SOUTH);
+    game.executeAction(Action.ORIENT_EAST);
+    game.executeAction(Action.ORIENT_WEST);
+    game.executeAction(Action.ROTATE_LEFT);
+    game.executeAction(Action.ROTATE_RIGHT);
+
+    expect(game.turns).toBe(0);
+  });
+
+  it('should not consume a turn when shooting', () => {
+    game.executeAction(Action.ORIENT_WEST); // la fleche sort du plateau : rate
+    game.executeAction(Action.SHOOT);
+
+    expect(game.turns).toBe(0);
+    expect(game.player.arrows).toBe(0);
+  });
+
+  it('should not consume a turn when hitting a wall', () => {
+    game.executeAction(Action.ORIENT_WEST);
+    game.executeAction(Action.ADVANCE);
+
+    expect(game.turns).toBe(0);
+    expect(game.player.position).toEqual({ x: 0, y: 0 });
+    expect(game.lastPerceptions).toContain(Perception.BUMP);
+  });
+
+  it('should not consume a turn when trying to exit in the wrong cell', () => {
+    game.executeAction(Action.ADVANCE); // (0,1) : 1 tour
+    game.executeAction(Action.EXIT); // pas la case de depart
+
+    expect(game.turns).toBe(1);
+    expect(game.status).toBe(GameStatus.PLAYING);
+  });
+
+  it('should only prefix the journal with a turn number on moves', () => {
+    game.executeAction(Action.ORIENT_EAST);
+    game.executeAction(Action.ADVANCE); // (1,0)
+
+    expect(game.logs[1]).toBe("Vous regardez maintenant vers l'est.");
+    expect(game.logs[2]).toBe('Tour 1: Vous avez avancé à la case (1, 0).');
+  });
 });

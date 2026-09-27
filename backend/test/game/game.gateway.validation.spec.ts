@@ -48,7 +48,7 @@ describe('GameGateway (validation du payload WebSocket)', () => {
 
   const nextUpdate = (timeout = 3000) =>
     new Promise<Record<string, unknown>>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('timeout esperando gameStateUpdate')), timeout);
+      const timer = setTimeout(() => reject(new Error('timeout en attente de gameStateUpdate')), timeout);
       socket.once('gameStateUpdate', (state) => {
         clearTimeout(timer);
         resolve(state as Record<string, unknown>);
@@ -67,8 +67,16 @@ describe('GameGateway (validation du payload WebSocket)', () => {
     const state = await pending;
 
     expect(state['gameId']).toBe(gameId);
-    expect(state['turns']).toBe(1);
     expect(state).toHaveProperty('playerState');
+    expect(state).toHaveProperty('startPosition');
+
+    // Un tour ne compte que les cases parcourues. La position de depart etant
+    // tiree au hasard, cet ADVANCE peut se retrouver face a un mur.
+    const start = state['startPosition'] as { x: number; y: number };
+    const player = (state['playerState'] as { position: { x: number; y: number } }).position;
+    const hasMoved = player.x !== start.x || player.y !== start.y;
+
+    expect(state['turns']).toBe(hasMoved ? 1 : 0);
   });
 
   it('rechaza un gameId que no es un UUID sin tocar el estado', async () => {

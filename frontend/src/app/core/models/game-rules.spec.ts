@@ -46,13 +46,13 @@ describe('game-rules', () => {
     });
 
     it('refuse les valeurs non entières', () => {
-      expect(validateGameConfig(config({ boardSize: 4.5 }))).toHaveLength(1);
-      expect(validateGameConfig(config({ arrows: Number.NaN }))).toHaveLength(1);
+      expect(validateGameConfig(config({ boardSize: 4.5 }))).toHaveSize(1);
+      expect(validateGameConfig(config({ arrows: Number.NaN }))).toHaveSize(1);
     });
 
     it('refuse plus de gouffres que la grotte n\'en peut contenir', () => {
       const errors = validateGameConfig(config({ boardSize: 3, pitCount: 7 }));
-      expect(errors).toHaveLength(1);
+      expect(errors).toHaveSize(1);
       expect(errors[0]).toContain('ne peut pas contenir plus de 6 gouffres');
     });
 
@@ -61,12 +61,12 @@ describe('game-rules', () => {
     });
 
     it('accumule plusieurs erreurs', () => {
-      expect(validateGameConfig(config({ boardSize: 2, pitCount: 0, arrows: 9 }))).toHaveLength(3);
+      expect(validateGameConfig(config({ boardSize: 2, pitCount: 0, arrows: 9 }))).toHaveSize(3);
     });
 
     it('ne signale pas deux fois la même grotte', () => {
       // boardSize 3 + 7 gouffres : une seule erreur, pas une par paramètre.
-      expect(validateGameConfig(config({ boardSize: 3, pitCount: 7 }))).toHaveLength(1);
+      expect(validateGameConfig(config({ boardSize: 3, pitCount: 7 }))).toHaveSize(1);
     });
   });
 });
