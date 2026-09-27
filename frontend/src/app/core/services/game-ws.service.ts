@@ -1,28 +1,39 @@
-import { Injectable, NgZone, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { Injectable, OnDestroy, signal } from '@angular/core';
+import { Observable, Subject } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 import { Action } from '../models/enums';
 import { GameState } from '../models/game-state.model';
 
+/**
+ * Transport WebSocket de la partie.
+ *
+ * L'application fonctionne en zoneless (comportement par défaut depuis
+ * Angular 21) : l'écriture dans un signal suffit à planifier le rendu, il n'y a
+ * donc aucun besoin de NgZone.run(). Les états de connexion sont exposés en
+ * signaux ; les flux d'événements (état de jeu, erreurs) restent des observables
+ * car ce sont des événements, pas des valeurs courantes.
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class GameWsService implements OnDestroy {
   private socket!: Socket;
 
-  private gameStateSubject = new Subject<GameState>();
-  public gameState$: Observable<GameState> = this.gameStateSubject.asObservable();
+  private readonly gameStateSubject = new Subject<GameState>();
+  public readonly gameState$: Observable<GameState> = this.gameStateSubject.asObservable();
 
-  private isConnectedSubject = new BehaviorSubject<boolean>(false);
-  public isConnected$: Observable<boolean> = this.isConnectedSubject.asObservable();
+  private readonly gameErrorSubject = new Subject<string>();
+  public readonly gameError$: Observable<string> = this.gameErrorSubject.asObservable();
 
-  private connectionErrorSubject = new BehaviorSubject<string | null>(null);
-  public connectionError$: Observable<string | null> = this.connectionErrorSubject.asObservable();
+  private readonly connectedState = signal(false);
+  /** Etat de la connexion au serveur. */
+  public readonly isConnected = this.connectedState.asReadonly();
 
-  private gameErrorSubject = new Subject<string>();
-  public gameError$: Observable<string> = this.gameErrorSubject.asObservable();
+  private readonly connectionErrorState = signal<string | null>(null);
+  /** Raison de la derniere echec de connexion, `null` si la connexion est saine. */
+  public readonly connectionError = this.connectionErrorState.asReadonly();
 
-  constructor(private readonly ngZone: NgZone) {
+  constructor() {
     this.connect();
   }
 
@@ -38,45 +49,33 @@ export class GameWsService implements OnDestroy {
       });
 
       this.socket.on('connect', () => {
-        this.ngZone.run(() => {
-          this.isConnectedSubject.next(true);
-          this.connectionErrorSubject.next(null);
-        });
+        this.connectedState.set(true);
+        this.connectionErrorState.set(null);
       });
 
       this.socket.on('disconnect', (reason: string) => {
-        this.ngZone.run(() => {
-          this.isConnectedSubject.next(false);
-          if (reason === 'io server disconnect') {
-            this.socket.connect();
-          }
-        });
+        this.connectedState.set(false);
+        if (reason === 'io server disconnect') {
+          this.socket.connect();
+        }
       });
 
       this.socket.on('connect_error', (error: Error) => {
-        this.ngZone.run(() => {
-          this.isConnectedSubject.next(false);
-          this.connectionErrorSubject.next(`Erreur de connexion au serveur : ${error.message}`);
-        });
+        this.connectedState.set(false);
+        this.connectionErrorState.set(`Erreur de connexion au serveur : ${error.message}`);
       });
 
       this.socket.on('gameStateUpdate', (state: GameState) => {
-        this.ngZone.run(() => {
-          this.gameStateSubject.next(state);
-        });
+        this.gameStateSubject.next(state);
       });
 
       this.socket.on('gameError', (data: { message: string }) => {
-        this.ngZone.run(() => {
-          this.gameErrorSubject.next(data.message);
-        });
+        this.gameErrorSubject.next(data.message);
       });
 
       this.socket.on('exception', (data: any) => {
-        this.ngZone.run(() => {
-          const msg = typeof data === 'string' ? data : data?.message || 'Erreur du serveur WebSocket';
-          this.gameErrorSubject.next(msg);
-        });
+        const msg = typeof data === 'string' ? data : data?.message || 'Erreur du serveur WebSocket';
+        this.gameErrorSubject.next(msg);
       });
     } else if (!this.socket.connected) {
       this.socket.connect();
@@ -87,20 +86,16 @@ export class GameWsService implements OnDestroy {
     if (this.socket && this.socket.connected) {
       this.socket.emit('gameAction', { gameId, action });
       return true;
-    } else {
-      this.gameErrorSubject.next('Impossible d\'envoyer l\'action : connexion perdue avec le serveur.');
-      return false;
     }
+    this.gameErrorSubject.next('Impossible d\'envoyer l\'action : connexion perdue avec le serveur.');
+    return false;
   }
 
   disconnect(): void {
-    if (this.socket) {
-      this.socket.disconnect();
-    }
+    this.socket?.disconnect();
   }
 
   ngOnDestroy(): void {
     this.disconnect();
   }
 }
-

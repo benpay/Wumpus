@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { HomeComponent } from './home';
@@ -27,16 +27,20 @@ describe('HomeComponent', () => {
     }).compileComponents();
   });
 
-  const component = () => TestBed.createComponent(HomeComponent).componentInstance;
+  const component = () => {
+    const fixture = TestBed.createComponent(HomeComponent);
+    fixture.detectChanges();
+    return fixture.componentInstance;
+  };
 
   describe('configuration', () => {
-    it('a la configuration por defecto del backend', () => {
+    it('utilise la configuration par défaut du backend', () => {
       const home = component();
       expect(home.config).toEqual({ boardSize: 4, pitCount: 2, arrows: 1 });
       expect(home.canStartGame).toBe(true);
     });
 
-    it('bloquea el botón si la configuración es inválida', () => {
+    it('bloque le bouton si la configuration est invalide', () => {
       const home = component();
       home.arrows = 9;
       expect(home.canStartGame).toBe(false);
@@ -52,26 +56,30 @@ describe('HomeComponent', () => {
   });
 
   describe('startGame', () => {
-    it('crea la partida y navega cuando la configuración es válida', () => {
+    it('crée la partie et navigue quand la configuration est valide', () => {
       const home = component();
       home.startGame();
 
       expect(createGame).toHaveBeenCalledWith({ boardSize: 4, pitCount: 2, arrows: 1 });
-      expect(routerNavigate).toHaveBeenCalledWith(['/game', 'game-1']);
-      expect(home.errorMessage).toBeNull();
+      expect(routerNavigate).toHaveBeenCalledWith(
+        ['/game', 'game-1'],
+        expect.objectContaining({ state: expect.anything() }),
+      );
+      expect(home.errorMessage()).toBeNull();
+      expect(home.creatingGame()).toBe(false);
     });
 
-    it('no llama a la API si la configuración es inválida', () => {
+    it('n\'appelle pas l\'API si la configuration est invalide', () => {
       const home = component();
       home.boardSize = 2;
       home.startGame();
 
       expect(createGame).not.toHaveBeenCalled();
       expect(routerNavigate).not.toHaveBeenCalled();
-      expect(home.errorMessage).toContain('entre 3 et 10');
+      expect(home.errorMessage()).toContain('entre 3 et 10');
     });
 
-    it('muestra el mensaje del 400 del backend', () => {
+    it('affiche le message du 400 renvoyé par le backend', () => {
       createGame.mockReturnValue(
         throwError(
           () =>
@@ -84,19 +92,17 @@ describe('HomeComponent', () => {
       const home = component();
       home.startGame();
 
-      expect(home.errorMessage).toBe('boardSize must not be less than 3');
-      expect(home.creatingGame).toBe(false);
+      expect(home.errorMessage()).toBe('boardSize must not be less than 3');
+      expect(home.creatingGame()).toBe(false);
       expect(routerNavigate).not.toHaveBeenCalled();
     });
 
     it('avisa si el backend está apagado', () => {
-      createGame.mockReturnValue(
-        throwError(() => new HttpErrorResponse({ status: 0 })),
-      );
+      createGame.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
       const home = component();
       home.startGame();
 
-      expect(home.errorMessage).toContain('backend');
+      expect(home.errorMessage()).toContain('backend');
     });
   });
 
@@ -106,19 +112,17 @@ describe('HomeComponent', () => {
         of([{ id: 'a', status: 'WON', turns: 12 } as never]),
       );
       const home = component();
-      home.ngOnInit();
 
-      expect(home.loadingHistory).toBe(false);
-      expect(home.history).toHaveLength(1);
+      expect(home.loadingHistory()).toBe(false);
+      expect(home.history()).toHaveLength(1);
     });
 
-    it('no bloquea l\'écran si l\'historique échoue', () => {
+    it('ne bloque pas l\'écran si l\'historique échoue', () => {
       getGameHistory.mockReturnValue(throwError(() => new Error('db down')));
       const home = component();
-      home.ngOnInit();
 
-      expect(home.loadingHistory).toBe(false);
-      expect(home.history).toEqual([]);
+      expect(home.loadingHistory()).toBe(false);
+      expect(home.history()).toEqual([]);
     });
   });
 });

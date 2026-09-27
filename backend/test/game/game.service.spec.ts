@@ -75,9 +75,9 @@ describe('GameService', () => {
         action: Action.SHOOT,
       });
 
-      // El DTO expone las flechas con las que se creó la partida...
+      // Le DTO expose les flèches avec lesquelles la partie a été créée...
       expect(afterShoot.arrows).toBe(3);
-      // ...mientras que playerState.arrows son las que quedan.
+      // ...tandis que playerState.arrows sont les restantes.
       expect(afterShoot.playerState.arrows).toBe(2);
     });
   });

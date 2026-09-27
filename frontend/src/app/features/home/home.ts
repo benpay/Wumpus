@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { GameConfig } from '../../core/models/game-config.model';
+import { GameStatus } from '../../core/models/enums';
 import {
   DEFAULT_ARROWS,
   DEFAULT_BOARD_SIZE,
@@ -30,6 +31,8 @@ export class HomeComponent implements OnInit {
   readonly loadingHistory = signal(true);
   readonly creatingGame = signal(false);
   readonly errorMessage = signal<string | null>(null);
+
+  readonly GameStatus = GameStatus;
 
   constructor(
     private readonly gameApiService: GameApiService,

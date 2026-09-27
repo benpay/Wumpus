@@ -14,7 +14,6 @@ export class GameStateDto {
   message!: string;
   turns!: number;
   visitedPositions!: Position[];
-  logs!: string[];
   /** Case de départ: c'est par là qu'il faut revenir pour s'enfuir avec l'or. */
   startPosition!: Position;
   wumpusKilled!: boolean;

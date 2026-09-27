@@ -23,34 +23,48 @@ export class ControlsComponent {
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent): void {
-    if (this.disabled) return;
+    if (this.disabled || this.isTypingTarget(event.target)) return;
 
-    switch (event.code) {
+    const action = this.actionForKey(event.code);
+    if (action === null) return;
+
+    event.preventDefault();
+    this.emit(action);
+  }
+
+  private isTypingTarget(target: EventTarget | null): boolean {
+    if (!(target instanceof HTMLElement)) return false;
+    return (
+      target.isContentEditable ||
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLSelectElement ||
+      target instanceof HTMLButtonElement
+    );
+  }
+
+  private actionForKey(code: string): Action | null {
+    switch (code) {
       case 'ArrowUp':
       case 'KeyW':
-        this.emit(Action.ORIENT_NORTH);
-        break;
+        return Action.ORIENT_NORTH;
       case 'ArrowDown':
       case 'KeyS':
-        this.emit(Action.ORIENT_SOUTH);
-        break;
+        return Action.ORIENT_SOUTH;
       case 'ArrowLeft':
       case 'KeyA':
-        this.emit(Action.ORIENT_WEST);
-        break;
+        return Action.ORIENT_WEST;
       case 'ArrowRight':
       case 'KeyD':
-        this.emit(Action.ORIENT_EAST);
-        break;
+        return Action.ORIENT_EAST;
       case 'Space':
-        this.emit(Action.ADVANCE);
-        break;
+        return Action.ADVANCE;
       case 'KeyF':
-        this.emit(Action.SHOOT);
-        break;
+        return Action.SHOOT;
       case 'KeyE':
-        this.emit(Action.EXIT);
-        break;
+        return Action.EXIT;
+      default:
+        return null;
     }
   }
 }

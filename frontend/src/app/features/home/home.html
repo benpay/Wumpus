@@ -49,20 +49,20 @@
       </div>
 
       <div *ngIf="!loadingHistory() && history().length > 0" class="history-list">
-        <div *ngFor="let item of history()" class="history-card" [class.won]="item.status === 'WON'"
-          [class.lost]="item.status === 'LOST'">
+        <div *ngFor="let item of history()" class="history-card" [class.won]="item.status === GameStatus.WON"
+          [class.lost]="item.status === GameStatus.LOST">
           <div class="history-header">
-            <span class="status-badge" [class.won]="item.status === 'WON'">
-              {{ item.status === 'WON' ? '🏆 VICTOIRE' : '💀 DÉFAITE' }}
+            <span class="status-badge" [class.won]="item.status === GameStatus.WON">
+              {{ item.status === GameStatus.WON ? '🏆 VICTOIRE' : '💀 DÉFAITE' }}
             </span>
             <span class="date">{{ item.createdAt | date:'short' }}</span>
           </div>
           <div class="history-details">
             <span>Grotte: {{ item.boardSize }}x{{ item.boardSize }}</span>
             <span>Tours: {{ item.turns }}</span>
-            <span> gouffres: {{ item.pitCount }}</span>
+            <span>Gouffres: {{ item.pitCount }}</span>
             <span>Or: {{ item.hasGold ? 'Oui 🪙' : 'Non' }}</span>
-            <span>Wumpus Mort: {{ item.wumpusKilled ? 'Oui 🏹' : 'Non' }}</span>
+            <span>Wumpus mort: {{ item.wumpusKilled ? 'Oui 🏹' : 'Non' }}</span>
           </div>
         </div>
       </div>

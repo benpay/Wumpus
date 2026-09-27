@@ -347,8 +347,8 @@
   }
 }
 
-/* Effet d'alarme pour la mort du Wumpus: sec, rouge et avec tremblement,
-   pour etre immediatement distinct du destello doux et chaud de l'or. */
+/* Effet d'alarme pour la mort du Wumpus : sec, rouge et avec tremblement,
+   pour être immédiatement distinct de l'éclat doux et chaud de l'or. */
 .game-layout.wumpus-shake {
   animation: wumpusShake 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }

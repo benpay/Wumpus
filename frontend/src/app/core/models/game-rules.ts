@@ -1,10 +1,5 @@
 import { GameConfig } from './game-config.model';
 
-/**
- * Reglas de configuracion. Reflejan exactamente lo que valida la API
- * (backend/src/game/domain/game-rules.ts) para poder avisar al usuario
- * antes de enviar la peticion.
- */
 export const MIN_BOARD_SIZE = 3;
 export const MAX_BOARD_SIZE = 10;
 export const MIN_PIT_COUNT = 1;
@@ -17,7 +12,7 @@ export const DEFAULT_PIT_COUNT = 2;
 export const DEFAULT_ARROWS = 1;
 
 /**
- * La salida, el Wumpus y el oro ocupan 3 casillas que no pueden ser un gouffre.
+ * La sortie, le Wumpus et l'or occupent 3 cases qui ne peuvent pas être un gouffre.
  */
 export function maxPitCountFor(boardSize: number): number {
   return Math.min(MAX_PIT_COUNT, boardSize * boardSize - 3);
@@ -27,7 +22,7 @@ const isIntegerInRange = (value: number, min: number, max: number): boolean =>
   Number.isInteger(value) && value >= min && value <= max;
 
 /**
- * Devuelve la lista de errores en frances. Vacio = configuracion válida.
+ * Renvoie la liste des erreurs en français. Vide = configuration valide.
  */
 export function validateGameConfig(config: GameConfig): string[] {
   const errors: string[] = [];
@@ -47,7 +42,7 @@ export function validateGameConfig(config: GameConfig): string[] {
     if (config.pitCount > maxPits) {
       errors.push(
         `Une grotte de ${config.boardSize}x${config.boardSize} ne peut pas contenir plus de ${maxPits} gouffres ` +
-          `(la sortie, le Wumpus et l'or occupent 3 cases).`,
+        `(la sortie, le Wumpus et l'or occupent 3 cases).`,
       );
     }
   }

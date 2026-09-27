@@ -7,11 +7,6 @@ import { GamePresenter } from '../../src/game/game.presenter.js';
 import { GameService } from '../../src/game/game.service.js';
 import { PersistenceService } from '../../src/persistence/persistence.service.js';
 
-/**
- * El ValidationPipe global tambien se aplica al @MessageBody() del gateway.
- * Si GameActionDto no estuviera decorado, `whitelist` lo vaciaria y el juego
- * se quedaria congelado sin avisar. Este test es el que lo detecta.
- */
 describe('GameGateway (validation du payload WebSocket)', () => {
   let app: INestApplication;
   let socket: Socket;
@@ -65,7 +60,7 @@ describe('GameGateway (validation du payload WebSocket)', () => {
     return ((await response.json()) as { gameId: string }).gameId;
   };
 
-  it('aplica la acción y emite el estado completo', async () => {
+  it('applique l\'action et émet l\'état complet', async () => {
     const gameId = await createGame();
     const pending = nextUpdate();
     socket.emit('gameAction', { gameId, action: 'ADVANCE' });
@@ -82,21 +77,21 @@ describe('GameGateway (validation du payload WebSocket)', () => {
     await expect(pending).rejects.toThrow('timeout');
   });
 
-  it('rechaza una acción desconocida', async () => {
+  it('rejette une action inconnue', async () => {
     const gameId = await createGame();
     const pending = nextUpdate(1000);
-    socket.emit('gameAction', { gameId, action: 'DANZAR' });
+    socket.emit('gameAction', { gameId, action: 'DANSER' });
     await expect(pending).rejects.toThrow('timeout');
   });
 
-  it('rechaza un payload con propiedades de más', async () => {
+  it('rejette un payload avec des propriétés en trop', async () => {
     const gameId = await createGame();
     const pending = nextUpdate(1000);
     socket.emit('gameAction', { gameId, action: 'ADVANCE', trampa: true });
     await expect(pending).rejects.toThrow('timeout');
   });
 
-  it('sigue aceptando la acción válida tras un payload inválido', async () => {
+  it('accepte toujours l\'action valide après un payload invalide', async () => {
     const gameId = await createGame();
     socket.emit('gameAction', { gameId, action: 'INVALID' });
     await new Promise((r) => setTimeout(r, 200));

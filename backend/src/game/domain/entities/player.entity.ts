@@ -11,7 +11,7 @@ export class Player {
   position: Position;
   direction: Direction;
   arrows: number;
-  /** Flèches qui lancent la partie : `arrows` descend lorsque vous tirez. */
+  /** Flèches qui lancent la partie : `arrows` descend lorsque vous tirez. */
   readonly initialArrows: number;
   hasGold: boolean = false;
 

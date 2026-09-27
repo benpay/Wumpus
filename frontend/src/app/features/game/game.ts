@@ -1,6 +1,6 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
 import { Action, GameStatus } from '../../core/models/enums';
 import { GameConfig } from '../../core/models/game-config.model';
 import {
@@ -16,6 +16,12 @@ import { ControlsComponent } from './components/controls/controls';
 import { LogComponent } from './components/log/log';
 import { CommonModule } from '@angular/common';
 
+const GOLD_FLASH_MS = 1600;
+const WUMPUS_FLASH_MS = 1100;
+const WS_ERROR_MS = 5000;
+
+type FlashKind = 'gold' | 'wumpus';
+
 @Component({
   selector: 'app-game',
   standalone: true,
@@ -23,152 +29,138 @@ import { CommonModule } from '@angular/common';
   templateUrl: './game.html',
   styleUrls: ['./game.css'],
 })
-export class GameComponent implements OnInit, OnDestroy {
-  gameId!: string;
-  gameState: GameState | null = null;
-  loading: boolean = true;
-  error: string | null = null;
-  isConnected: boolean = true;
-  wsError: string | null = null;
-  /** Declenche le destello dore quand le joueur vient de ramasser l'or. */
-  goldFlash: boolean = false;
-  wumpusFlash: boolean = false;
+export class GameComponent implements OnDestroy {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly gameApiService = inject(GameApiService);
+  private readonly gameWsService = inject(GameWsService);
+
+  private readonly gameId = signal<string | null>(null);
+  readonly gameState = signal<GameState | null>(null);
+  readonly loading = signal(true);
+  readonly error = signal<string | null>(null);
+
+  /** Déclenche l'éclat doré quand le joueur vient de ramasser l'or. */
+  readonly goldFlash = signal(false);
+  /** Déclenche l'effet d'alarme quand le joueur tue le Wumpus d'une flèche. */
+  readonly wumpusFlash = signal(false);
+
+  readonly isConnected = this.gameWsService.isConnected;
 
   readonly GameStatus = GameStatus;
 
-  private subscription = new Subscription();
-  private goldFlashTimeout?: ReturnType<typeof setTimeout>;
-  private wumpusFlashTimeout?: ReturnType<typeof setTimeout>;
+  private readonly wsError = signal<string | null>(null);
+  /** Erreur affichee dans le toast : une erreur de jeu prime sur une erreur de connexion. */
+  readonly displayedError = computed<string | null>(
+    () => this.wsError() ?? this.gameWsService.connectionError(),
+  );
 
-  constructor(
-    private readonly route: ActivatedRoute,
-    private readonly router: Router,
-    private readonly gameApiService: GameApiService,
-    private readonly gameWsService: GameWsService,
-    private readonly cdr: ChangeDetectorRef,
-  ) { }
+  private readonly timers: Partial<Record<FlashKind | 'wsError', ReturnType<typeof setTimeout>>> = {};
 
-  ngOnInit(): void {
+  constructor() {
     // 1. Écouter les changements de paramètres dans l'URL (/game/:id)
-    this.subscription.add(
-      this.route.paramMap.subscribe((params) => {
-        const id = params.get('id');
-        if (!id) {
-          this.router.navigate(['/']);
-          return;
-        }
-        if (id !== this.gameId) {
-          this.loadGameById(id);
-        }
-      }),
-    );
+    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      const id = params.get('id');
+      if (!id) {
+        this.router.navigate(['/']);
+        return;
+      }
+      if (id !== this.gameId()) {
+        this.loadGameById(id);
+      }
+    });
 
     // 2. Souscrire aux mises à jour WebSocket
-    this.subscription.add(
-      this.gameWsService.gameState$.subscribe((updatedState) => {
-        if (updatedState.gameId === this.gameId) {
+    this.gameWsService.gameState$
+      .pipe(takeUntilDestroyed())
+      .subscribe((updatedState) => {
+        if (updatedState.gameId === this.gameId()) {
           this.applyState(updatedState);
         }
-      }),
-    );
+      });
 
-    // 3. Suivi de l'état de la connexion WebSocket
-    this.subscription.add(
-      this.gameWsService.isConnected$.subscribe((connected) => {
-        this.isConnected = connected;
-      }),
-    );
+    // 3. Erreurs en provenance du WebSocket
+    this.gameWsService.gameError$
+      .pipe(takeUntilDestroyed())
+      .subscribe((message) => {
+        this.wsError.set(message);
+        this.scheduleReset('wsError', WS_ERROR_MS, () => this.wsError.set(null));
+      });
+  }
 
-    // 4. Erreurs en provenance du WebSocket
-    this.subscription.add(
-      this.gameWsService.gameError$.subscribe((errMsg) => {
-        this.wsError = errMsg;
-        setTimeout(() => {
-          if (this.wsError === errMsg) {
-            this.wsError = null;
-          }
-        }, 5000);
-      }),
-    );
+  /** Arme un one-shot : la cle est reprogrammée à chaque appel, jamais empilée. */
+  private scheduleReset(
+    kind: FlashKind | 'wsError',
+    delayMs: number,
+    apply: () => void,
+  ): void {
+    const pending = this.timers[kind];
+    if (pending) {
+      clearTimeout(pending);
+    }
+    this.timers[kind] = setTimeout(() => {
+      apply();
+      delete this.timers[kind];
+    }, delayMs);
   }
 
   private loadGameById(id: string): void {
-    this.gameId = id;
-    this.loading = true;
-    this.error = null;
+    this.gameId.set(id);
+    this.loading.set(true);
+    this.error.set(null);
 
     // Récupérer l'état initial via le state de navigation s'il existe
     const stateFromHistory = history.state?.['gameState'];
-    if (stateFromHistory && stateFromHistory.gameId === this.gameId) {
+    if (stateFromHistory && stateFromHistory.gameId === id) {
       this.applyState(stateFromHistory);
     } else {
-      this.gameState = null;
+      this.gameState.set(null);
     }
 
     // Charger/rafraîchir via REST
-    this.gameApiService.getGame(this.gameId).subscribe({
-      next: (state) => {
-        this.applyState(state);
-      },
+    this.gameApiService.getGame(id).subscribe({
+      next: (state) => this.applyState(state),
       error: () => {
-        if (!this.gameState) {
-          this.error = "La partie n'a pas pu être chargée.";
+        if (!this.gameState()) {
+          this.error.set("La partie n'a pas pu être chargée.");
         }
-        this.loading = false;
-        this.cdr.detectChanges(); // Forcer Angular à détecter le changement et à mettre à jour la vue.
+        this.loading.set(false);
       },
     });
   }
 
   /**
    * Point d'entrée unique pour tout nouvel état du jeu. Centraliser l'affectation
-   * garantit que la détection du ramassage d'or fonctionne aussi bien via REST
-   * que via WebSocket.
+   * garantit que les effets (or, mort du Wumpus) se déclenchent aussi bien via
+   * REST que via WebSocket.
    */
   private applyState(state: GameState): void {
-    const hadGold = this.gameState?.playerState.hasGold ?? false;
-    const hadKilledWumpus = this.gameState?.wumpusKilled ?? false;
-    this.gameState = state;
-    this.loading = false;
+    const previous = this.gameState();
+    this.gameState.set(state);
+    this.loading.set(false);
 
-    if (!hadGold && state.playerState.hasGold) {
-      this.triggerGoldFlash();
-    }
-    if (!hadKilledWumpus && state.wumpusKilled) {
-      this.triggerWumpusFlash();
-    }
+    // Le tout premier etat est un affichage, pas un evenement: recharger une
+    // partie ou la restaurer depuis l'historique ne doit pas rejouer les effets.
+    if (previous === null) return;
 
-    this.cdr.detectChanges(); // Forcer Angular à détecter le changement et à mettre à jour la vue.
+    if (!previous.playerState.hasGold && state.playerState.hasGold) {
+      this.triggerFlash('gold', GOLD_FLASH_MS);
+    }
+    if (!previous.wumpusKilled && state.wumpusKilled) {
+      this.triggerFlash('wumpus', WUMPUS_FLASH_MS);
+    }
   }
 
-  private triggerGoldFlash(): void {
-    this.goldFlash = true;
-    if (this.goldFlashTimeout) {
-      clearTimeout(this.goldFlashTimeout);
-    }
-    this.goldFlashTimeout = setTimeout(() => {
-      this.goldFlash = false;
-      this.cdr.detectChanges();
-    }, 1600);
-  }
-
-  /**
-   * Effet d'alarme pour la mort du Wumpus
-   */
-  private triggerWumpusFlash(): void {
-    this.wumpusFlash = true;
-    if (this.wumpusFlashTimeout) {
-      clearTimeout(this.wumpusFlashTimeout);
-    }
-    this.wumpusFlashTimeout = setTimeout(() => {
-      this.wumpusFlash = false;
-      this.cdr.detectChanges();
-    }, 1100);
+  private triggerFlash(kind: FlashKind, durationMs: number): void {
+    const target = kind === 'gold' ? this.goldFlash : this.wumpusFlash;
+    target.set(true);
+    this.scheduleReset(kind, durationMs, () => target.set(false));
   }
 
   onActionSelected(action: Action): void {
-    if (this.gameId && this.gameState?.status === GameStatus.PLAYING) {
-      this.gameWsService.sendAction(this.gameId, action);
+    const id = this.gameId();
+    if (id && this.gameState()?.status === GameStatus.PLAYING) {
+      this.gameWsService.sendAction(id, action);
     }
   }
 
@@ -181,32 +173,28 @@ export class GameComponent implements OnInit, OnDestroy {
    * pitCount et arrows, donc on peut rejouer exactement la meme grotte.
    */
   newGame(): void {
+    const state = this.gameState();
     const config: GameConfig = {
-      boardSize: this.gameState?.boardSize ?? DEFAULT_BOARD_SIZE,
-      pitCount: this.gameState?.pitCount ?? DEFAULT_PIT_COUNT,
-      arrows: this.gameState?.arrows ?? DEFAULT_ARROWS,
+      boardSize: state?.boardSize ?? DEFAULT_BOARD_SIZE,
+      pitCount: state?.pitCount ?? DEFAULT_PIT_COUNT,
+      arrows: state?.arrows ?? DEFAULT_ARROWS,
     };
     this.gameApiService.createGame(config).subscribe({
-      next: (state) => {
-        this.gameId = state.gameId;
-        this.error = null;
-        this.applyState(state);
-        this.router.navigate(['/game', state.gameId], { state: { gameState: state } });
+      next: (created) => {
+        this.error.set(null);
+        this.applyState(created);
+        this.gameId.set(created.gameId);
+        this.router.navigate(['/game', created.gameId], { state: { gameState: created } });
       },
-      error: () => {
-        this.error = "La partie n'a pas pu être créée.";
-        this.cdr.detectChanges();
-      },
+      error: () => this.error.set("La partie n'a pas pu être créée."),
     });
   }
 
   ngOnDestroy(): void {
-    this.subscription.unsubscribe();
-    if (this.goldFlashTimeout) {
-      clearTimeout(this.goldFlashTimeout);
-    }
-    if (this.wumpusFlashTimeout) {
-      clearTimeout(this.wumpusFlashTimeout);
+    for (const pending of Object.values(this.timers)) {
+      if (pending) {
+        clearTimeout(pending);
+      }
     }
   }
 }

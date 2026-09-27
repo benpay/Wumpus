@@ -51,11 +51,10 @@ export class BoardComponent implements OnChanges {
           (p) => p.x === x && p.y === y,
         );
         const isPlayerHere =
-          this.playerState &&
+          !!this.playerState &&
           this.playerState.position.x === x &&
           this.playerState.position.y === y;
-        const isStart =
-          !!this.startPosition && this.startPosition.x === x && this.startPosition.y === y;
+        const isStart = !!this.startPosition && this.startPosition.x === x && this.startPosition.y === y;
 
         row.push({
           x,
@@ -85,6 +84,8 @@ export class BoardComponent implements OnChanges {
         return '⬇️';
       case Direction.WEST:
         return '⬅️';
+      default:
+        return '⬆️';
     }
   }
 }

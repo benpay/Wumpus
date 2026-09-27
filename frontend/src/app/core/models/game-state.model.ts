@@ -24,7 +24,6 @@ export interface GameState {
   pitCount: number;
   arrows: number;
   message: string;
-  logs: string[];
   /** Case de départ de la grotte, affichée pour savoir où revenir avec l'or. */
   startPosition?: Position;
   wumpusKilled?: boolean;
@@ -34,11 +33,9 @@ export interface GameRecord {
   id: string;
   boardSize: number;
   pitCount: number;
-  arrowsCount: number;
   status: GameStatus;
   turns: number;
   hasGold: boolean;
   wumpusKilled: boolean;
-  logs: string[];
   createdAt: string;
 }

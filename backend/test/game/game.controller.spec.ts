@@ -16,7 +16,7 @@ describe('GameController', () => {
       turns: 0,
       visitedPositions: [{ x: 0, y: 0 }],
       boardSize: 4,
-      message: 'Comienza la partida',
+      message: 'La partie commence',
     }),
     getGameState: vi.fn().mockReturnValue({
       gameId: 'game-123',
@@ -26,7 +26,7 @@ describe('GameController', () => {
       turns: 0,
       visitedPositions: [{ x: 0, y: 0 }],
       boardSize: 4,
-      message: 'Comienza la partida',
+      message: 'La partie commence',
     }),
     getGameHistory: vi.fn().mockResolvedValue([]),
   };

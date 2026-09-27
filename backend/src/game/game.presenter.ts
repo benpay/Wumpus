@@ -17,7 +17,6 @@ export class GamePresenter {
       message: game.lastMessage,
       turns: game.turns,
       visitedPositions: game.visitedPositions.map((position) => ({ ...position })),
-      logs: [...game.logs],
       startPosition: { ...game.startPosition },
       wumpusKilled: !game.board.isWumpusAlive,
     };
