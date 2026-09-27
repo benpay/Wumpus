@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -24,15 +24,17 @@ export class HomeComponent implements OnInit {
   boardSize: number = DEFAULT_BOARD_SIZE;
   pitCount: number = DEFAULT_PIT_COUNT;
   arrows: number = DEFAULT_ARROWS;
-  history: GameRecord[] = [];
-  loadingHistory: boolean = true;
-  creatingGame: boolean = false;
-  errorMessage: string | null = null;
+
+  // En utilisant signal pour éviter les erreurs de détection de changements avec zoneless
+  readonly history = signal<GameRecord[]>([]);
+  readonly loadingHistory = signal(true);
+  readonly creatingGame = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   constructor(
     private readonly gameApiService: GameApiService,
     private readonly router: Router,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadHistory();
@@ -41,11 +43,11 @@ export class HomeComponent implements OnInit {
   loadHistory(): void {
     this.gameApiService.getGameHistory().subscribe({
       next: (records) => {
-        this.history = records;
-        this.loadingHistory = false;
+        this.history.set(records);
+        this.loadingHistory.set(false);
       },
       error: () => {
-        this.loadingHistory = false;
+        this.loadingHistory.set(false);
       },
     });
   }
@@ -59,25 +61,25 @@ export class HomeComponent implements OnInit {
   }
 
   get canStartGame(): boolean {
-    return !this.creatingGame && this.configErrors.length === 0;
+    return !this.creatingGame() && this.configErrors.length === 0;
   }
 
   startGame(): void {
     if (this.configErrors.length > 0) {
-      this.errorMessage = this.configErrors[0];
+      this.errorMessage.set(this.configErrors[0]);
       return;
     }
 
-    this.creatingGame = true;
-    this.errorMessage = null;
+    this.creatingGame.set(true);
+    this.errorMessage.set(null);
     this.gameApiService.createGame(this.config).subscribe({
       next: (state) => {
-        this.creatingGame = false;
+        this.creatingGame.set(false);
         this.router.navigate(['/game', state.gameId], { state: { gameState: state } });
       },
       error: (error: HttpErrorResponse) => {
-        this.creatingGame = false;
-        this.errorMessage = this.readApiError(error);
+        this.creatingGame.set(false);
+        this.errorMessage.set(this.readApiError(error));
       },
     });
   }

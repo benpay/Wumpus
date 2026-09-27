@@ -57,6 +57,24 @@ describe('Game Entity', () => {
     expect(game.lastMessage).toContain('or');
   });
 
+  it('should emit GLIMMER on the turn the gold is picked up', () => {
+    game.executeAction(Action.ADVANCE); // (0,1)
+    game.executeAction(Action.ROTATE_RIGHT); // Est
+    game.executeAction(Action.ADVANCE); // (1,1) -> Gold / Or!
+
+    expect(game.player.hasGold).toBe(true);
+    expect(game.lastPerceptions).toContain(Perception.GLIMMER);
+  });
+
+  it('should not emit GLIMMER on later turns once the gold is carried', () => {
+    game.executeAction(Action.ADVANCE); // (0,1)
+    game.executeAction(Action.ROTATE_RIGHT); // Est
+    game.executeAction(Action.ADVANCE); // (1,1) -> Gold / Or!
+    game.executeAction(Action.ADVANCE); // (2,1)
+
+    expect(game.lastPerceptions).not.toContain(Perception.GLIMMER);
+  });
+
   it('should lose if stepping into pit', () => {
     game.executeAction(Action.ROTATE_RIGHT); // Est
     game.executeAction(Action.ADVANCE); // (1,0)
@@ -85,6 +103,15 @@ describe('Game Entity', () => {
     game.executeAction(Action.ADVANCE); // (0,1)
     game.executeAction(Action.ADVANCE); // (0,2)
     expect(game.status).toBe(GameStatus.PLAYING);
+  });
+
+  it('should keep the Wumpus alive until an arrow actually hits it', () => {
+    // Le joueur est au (0,0) face au Nord. Wumpus est au (0,2).
+    game.executeAction(Action.ROTATE_RIGHT); // Est
+    game.executeAction(Action.SHOOT); // rate: le Wumpus n'est pas a l'est
+
+    expect(game.board.isWumpusAlive).toBe(true);
+    expect(game.lastPerceptions).not.toContain(Perception.SCREAM);
   });
 
   it('should win game when exiting from start position with gold', () => {

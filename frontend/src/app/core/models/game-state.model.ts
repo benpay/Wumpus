@@ -25,6 +25,9 @@ export interface GameState {
   arrows: number;
   message: string;
   logs: string[];
+  /** Case de départ de la grotte, affichée pour savoir où revenir avec l'or. */
+  startPosition?: Position;
+  wumpusKilled?: boolean;
 }
 
 export interface GameRecord {

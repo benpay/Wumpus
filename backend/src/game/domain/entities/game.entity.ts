@@ -78,35 +78,46 @@ export class Game {
     let message = '';
 
     switch (action) {
-      case Action.MOVE_NORTH: {
+      case Action.ADVANCE: {
+        const result = this.doAdvance();
+        currentTurnPerceptions.push(...result.perceptions);
+        message = result.message;
+        break;
+      }
+
+      case Action.ORIENT_NORTH: {
         this.player.direction = Direction.NORTH;
-        const result = this.doAdvance();
-        currentTurnPerceptions.push(...result.perceptions);
-        message = result.message;
+        message = `Vous regardez maintenant vers le ${Direction.NORTH}.`;
         break;
       }
 
-      case Action.MOVE_SOUTH: {
+      case Action.ORIENT_SOUTH: {
         this.player.direction = Direction.SOUTH;
-        const result = this.doAdvance();
-        currentTurnPerceptions.push(...result.perceptions);
-        message = result.message;
+        message = `Vous regardez maintenant vers le ${Direction.SOUTH}.`;
         break;
       }
 
-      case Action.MOVE_EAST: {
+      case Action.ORIENT_EAST: {
         this.player.direction = Direction.EAST;
-        const result = this.doAdvance();
-        currentTurnPerceptions.push(...result.perceptions);
-        message = result.message;
+        message = `Vous regardez maintenant vers le ${Direction.EAST}.`;
         break;
       }
 
-      case Action.MOVE_WEST: {
+      case Action.ORIENT_WEST: {
         this.player.direction = Direction.WEST;
-        const result = this.doAdvance();
-        currentTurnPerceptions.push(...result.perceptions);
-        message = result.message;
+        message = `Vous regardez maintenant vers le ${Direction.WEST}.`;
+        break;
+      }
+
+      case Action.ROTATE_LEFT: {
+        this.player.rotateLeft();
+        message = `Vous avez tourné à gauche. Vous regardez vers le ${this.player.direction}.`;
+        break;
+      }
+
+      case Action.ROTATE_RIGHT: {
+        this.player.rotateRight();
+        message = `Vous avez tourné à droite. Vous regardez vers le ${this.player.direction}.`;
         break;
       }
 
@@ -172,9 +183,10 @@ export class Game {
         message = "Le Wumpus vous a devoré! Vous avez perdu la partie.";
       } else {
         if (this.board.hasGold(nextPos) && !this.player.hasGold) {
+          perceptions.push(Perception.GLIMMER);
           this.player.pickUpGold();
           this.board.pickUpGold();
-          message = "Vous avez trouvé et pris l'or!";
+          message = "Un éclat d'or brille devant vous: vous le ramassez!";
         } else {
           message = `Vous avez avancé à la case (${nextPos.x}, ${nextPos.y}).`;
         }

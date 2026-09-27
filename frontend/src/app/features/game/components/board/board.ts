@@ -8,6 +8,7 @@ interface CellInfo {
   y: number;
   isVisited: boolean;
   isPlayerHere: boolean;
+  isStart: boolean;
   perceptions: Perception[];
 }
 
@@ -23,9 +24,16 @@ export class BoardComponent implements OnChanges {
   @Input() playerState!: PlayerState;
   @Input() visitedPositions: Position[] = [];
   @Input() perceptions: Perception[] = [];
+  @Input() startPosition?: Position;
 
   readonly Perception = Perception;
   grid: CellInfo[][] = [];
+
+  get cellPadding(): string {
+    if (this.boardSize >= 9) return '0.15rem';
+    if (this.boardSize >= 7) return '0.3rem';
+    return '0.5rem';
+  }
 
   ngOnChanges(): void {
     this.buildGrid();
@@ -46,12 +54,15 @@ export class BoardComponent implements OnChanges {
           this.playerState &&
           this.playerState.position.x === x &&
           this.playerState.position.y === y;
+        const isStart =
+          !!this.startPosition && this.startPosition.x === x && this.startPosition.y === y;
 
         row.push({
           x,
           y,
           isVisited,
           isPlayerHere,
+          isStart,
           perceptions: isPlayerHere ? this.perceptions : [],
         });
       }

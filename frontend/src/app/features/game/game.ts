@@ -30,10 +30,15 @@ export class GameComponent implements OnInit, OnDestroy {
   error: string | null = null;
   isConnected: boolean = true;
   wsError: string | null = null;
+  /** Declenche le destello dore quand le joueur vient de ramasser l'or. */
+  goldFlash: boolean = false;
+  wumpusFlash: boolean = false;
 
   readonly GameStatus = GameStatus;
 
   private subscription = new Subscription();
+  private goldFlashTimeout?: ReturnType<typeof setTimeout>;
+  private wumpusFlashTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -62,9 +67,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.subscription.add(
       this.gameWsService.gameState$.subscribe((updatedState) => {
         if (updatedState.gameId === this.gameId) {
-          this.gameState = updatedState;
-          this.loading = false;
-          this.cdr.detectChanges(); // Forcer Angular à détecter le changement et à mettre à jour la vue.
+          this.applyState(updatedState);
         }
       }),
     );
@@ -97,8 +100,7 @@ export class GameComponent implements OnInit, OnDestroy {
     // Récupérer l'état initial via le state de navigation s'il existe
     const stateFromHistory = history.state?.['gameState'];
     if (stateFromHistory && stateFromHistory.gameId === this.gameId) {
-      this.gameState = stateFromHistory;
-      this.loading = false;
+      this.applyState(stateFromHistory);
     } else {
       this.gameState = null;
     }
@@ -106,9 +108,7 @@ export class GameComponent implements OnInit, OnDestroy {
     // Charger/rafraîchir via REST
     this.gameApiService.getGame(this.gameId).subscribe({
       next: (state) => {
-        this.gameState = state;
-        this.loading = false;
-        this.cdr.detectChanges(); // Forcer Angular à détecter le changement et à mettre à jour la vue.
+        this.applyState(state);
       },
       error: () => {
         if (!this.gameState) {
@@ -118,6 +118,52 @@ export class GameComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges(); // Forcer Angular à détecter le changement et à mettre à jour la vue.
       },
     });
+  }
+
+  /**
+   * Point d'entrée unique pour tout nouvel état du jeu. Centraliser l'affectation
+   * garantit que la détection du ramassage d'or fonctionne aussi bien via REST
+   * que via WebSocket.
+   */
+  private applyState(state: GameState): void {
+    const hadGold = this.gameState?.playerState.hasGold ?? false;
+    const hadKilledWumpus = this.gameState?.wumpusKilled ?? false;
+    this.gameState = state;
+    this.loading = false;
+
+    if (!hadGold && state.playerState.hasGold) {
+      this.triggerGoldFlash();
+    }
+    if (!hadKilledWumpus && state.wumpusKilled) {
+      this.triggerWumpusFlash();
+    }
+
+    this.cdr.detectChanges(); // Forcer Angular à détecter le changement et à mettre à jour la vue.
+  }
+
+  private triggerGoldFlash(): void {
+    this.goldFlash = true;
+    if (this.goldFlashTimeout) {
+      clearTimeout(this.goldFlashTimeout);
+    }
+    this.goldFlashTimeout = setTimeout(() => {
+      this.goldFlash = false;
+      this.cdr.detectChanges();
+    }, 1600);
+  }
+
+  /**
+   * Effet d'alarme pour la mort du Wumpus
+   */
+  private triggerWumpusFlash(): void {
+    this.wumpusFlash = true;
+    if (this.wumpusFlashTimeout) {
+      clearTimeout(this.wumpusFlashTimeout);
+    }
+    this.wumpusFlashTimeout = setTimeout(() => {
+      this.wumpusFlash = false;
+      this.cdr.detectChanges();
+    }, 1100);
   }
 
   onActionSelected(action: Action): void {
@@ -143,10 +189,8 @@ export class GameComponent implements OnInit, OnDestroy {
     this.gameApiService.createGame(config).subscribe({
       next: (state) => {
         this.gameId = state.gameId;
-        this.gameState = state;
-        this.loading = false;
         this.error = null;
-        this.cdr.detectChanges();
+        this.applyState(state);
         this.router.navigate(['/game', state.gameId], { state: { gameState: state } });
       },
       error: () => {
@@ -158,5 +202,11 @@ export class GameComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
+    if (this.goldFlashTimeout) {
+      clearTimeout(this.goldFlashTimeout);
+    }
+    if (this.wumpusFlashTimeout) {
+      clearTimeout(this.wumpusFlashTimeout);
+    }
   }
 }

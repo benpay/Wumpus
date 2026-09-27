@@ -25,31 +25,31 @@
         </div>
       </div>
 
-      <div class="error-banner" *ngIf="configErrors.length > 0 || errorMessage" role="alert">
+      <div class="error-banner" *ngIf="configErrors.length > 0 || errorMessage()" role="alert">
         <p *ngFor="let error of configErrors">⚠️ {{ error }}</p>
-        <p *ngIf="configErrors.length === 0 && errorMessage">⚠️ {{ errorMessage }}</p>
+        <p *ngIf="configErrors.length === 0 && errorMessage()">⚠️ {{ errorMessage() }}</p>
       </div>
 
       <button (click)="startGame()" class="start-button" [disabled]="!canStartGame">
-        <span *ngIf="!creatingGame">🏹 Commencer l'Aventure</span>
-        <span *ngIf="creatingGame">⏳ Création en cours...</span>
+        <span *ngIf="!creatingGame()">🏹 Commencer l'Aventure</span>
+        <span *ngIf="creatingGame()">⏳ Création en cours...</span>
       </button>
     </div>
 
     <div class="history-section">
       <h2 class="section-title">📜 Historique des Parties</h2>
 
-      <div *ngIf="loadingHistory" class="loading-state">
+      <div *ngIf="loadingHistory()" class="loading-state">
         <div class="spinner"></div>
         <p>Chargement de l'historique...</p>
       </div>
 
-      <div *ngIf="!loadingHistory && history.length === 0" class="empty-state">
+      <div *ngIf="!loadingHistory() && history().length === 0" class="empty-state">
         <p>Aucune partie n'est encore enregistrée dans PostgreSQL.</p>
       </div>
 
-      <div *ngIf="!loadingHistory && history.length > 0" class="history-list">
-        <div *ngFor="let item of history" class="history-card" [class.won]="item.status === 'WON'"
+      <div *ngIf="!loadingHistory() && history().length > 0" class="history-list">
+        <div *ngFor="let item of history()" class="history-card" [class.won]="item.status === 'WON'"
           [class.lost]="item.status === 'LOST'">
           <div class="history-header">
             <span class="status-badge" [class.won]="item.status === 'WON'">

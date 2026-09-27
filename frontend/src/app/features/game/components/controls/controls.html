@@ -2,30 +2,30 @@
   <div class="control-group movement">
     <div class="dpad-grid">
       <div class="dpad-row">
-        <button (click)="emit(Action.MOVE_NORTH)" [disabled]="disabled" class="ctrl-btn dir-btn"
-          title="Déplacer vers le Haut (Flèche Haut / W)">
+        <button (click)="emit(Action.ORIENT_NORTH)" [disabled]="disabled" class="ctrl-btn dir-btn"
+          title="Orienter vers le Haut (Flèche Haut / W)">
           <span>⬆️</span>
           <span class="btn-label">Haut</span>
         </button>
       </div>
 
       <div class="dpad-row middle">
-        <button (click)="emit(Action.MOVE_WEST)" [disabled]="disabled" class="ctrl-btn dir-btn"
-          title="Déplacer vers la Gauche (Flèche Gauche / A)">
+        <button (click)="emit(Action.ORIENT_WEST)" [disabled]="disabled" class="ctrl-btn dir-btn"
+          title="Orienter vers la Gauche (Flèche Gauche / A)">
           <span>⬅️</span>
           <span class="btn-label">Gauche</span>
         </button>
 
-        <button (click)="emit(Action.MOVE_EAST)" [disabled]="disabled" class="ctrl-btn dir-btn"
-          title="Déplacer vers la Droite (Flèche Droite / D)">
+        <button (click)="emit(Action.ORIENT_EAST)" [disabled]="disabled" class="ctrl-btn dir-btn"
+          title="Orienter vers la Droite (Flèche Droite / D)">
           <span>➡️</span>
           <span class="btn-label">Droite</span>
         </button>
       </div>
 
       <div class="dpad-row">
-        <button (click)="emit(Action.MOVE_SOUTH)" [disabled]="disabled" class="ctrl-btn dir-btn"
-          title="Déplacer vers le Bas (Flèche Bas / S)">
+        <button (click)="emit(Action.ORIENT_SOUTH)" [disabled]="disabled" class="ctrl-btn dir-btn"
+          title="Orienter vers le Bas (Flèche Bas / S)">
           <span>⬇️</span>
           <span class="btn-label">Bas</span>
         </button>
@@ -34,15 +34,20 @@
   </div>
 
   <div class="control-group actions">
-    <button (click)="emit(Action.SHOOT)" [disabled]="disabled" class="ctrl-btn shoot"
-      title="Tirez une flèche (Espace / F)">
+    <button (click)="emit(Action.ADVANCE)" [disabled]="disabled" class="ctrl-btn advance"
+      title="Avancer d'une case (Espace)">
+      <span>🚶</span>
+      <span class="btn-label">Avancer (Espace)</span>
+    </button>
+
+    <button (click)="emit(Action.SHOOT)" [disabled]="disabled" class="ctrl-btn shoot" title="Tirez une flèche (F)">
       <span>🏹</span>
-      <span class="btn-label">Tirer flèche</span>
+      <span class="btn-label">Tirer flèche (F)</span>
     </button>
 
     <button (click)="emit(Action.EXIT)" [disabled]="disabled" class="ctrl-btn exit" title="Quittez la grotte (E)">
       <span>🚪</span>
-      <span class="btn-label">Quitter grotte</span>
+      <span class="btn-label">Quitter (E)</span>
     </button>
   </div>
 </div>

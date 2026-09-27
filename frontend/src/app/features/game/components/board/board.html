@@ -1,9 +1,17 @@
 <div class="board-container">
-  <div class="grid-layout" [style.grid-template-columns]="'repeat(' + boardSize + ', 1fr)'">
+  <div class="grid-layout" [style.--board-size]="boardSize" [style.--cell-pad]="cellPadding">
     <ng-container *ngFor="let row of grid">
       <div *ngFor="let cell of row" class="cell" [class.visited]="cell.isVisited" [class.unvisited]="!cell.isVisited"
-        [class.player-cell]="cell.isPlayerHere">
+        [class.player-cell]="cell.isPlayerHere" [class.start-cell]="cell.isStart"
+        [attr.title]="cell.isStart ? 'Case de départ : revenez ici pour fuir avec l\'or' : null">
         <span class="cell-coords">({{ cell.x }}, {{ cell.y }})</span>
+
+        <!-- Marqueur de la case de départ, visible même dans la brume -->
+        <div *ngIf="cell.isStart && !cell.isPlayerHere" class="start-marker">
+          <span class="start-flag">🚩</span>
+        </div>
+
+        <span *ngIf="cell.isStart && cell.isPlayerHere" class="start-flag start-flag-inline">🚩</span>
 
         <!-- Contenue quand la case est explorée -->
         <div *ngIf="cell.isVisited" class="cell-content">
@@ -15,16 +23,16 @@
 
           <!-- Badges de percepciones -->
           <div *ngIf="cell.isPlayerHere && cell.perceptions.length > 0" class="perceptions-badges">
-            <span *ngIf="hasPerception(cell, Perception.STENCH)" class="badge stench" title="Odeur du Wumpus">🦨
-              Odeur</span>
-            <span *ngIf="hasPerception(cell, Perception.BREEZE)" class="badge breeze" title="Sifflement de Pozo">💨
-              Sifflement</span>
-            <span *ngIf="hasPerception(cell, Perception.GLIMMER)" class="badge glimmer" title="Brillo de Oro">✨
-              Brillo</span>
-            <span *ngIf="hasPerception(cell, Perception.BUMP)" class="badge bump" title="Choc contre mur">💥
-              Choc</span>
-            <span *ngIf="hasPerception(cell, Perception.SCREAM)" class="badge scream" title="Cri du Wumpus">😱
-              Cri</span>
+            <span *ngIf="hasPerception(cell, Perception.STENCH)" class="badge stench" title="Odeur du Wumpus">🦨<span
+                class="badge-label">Odeur</span></span>
+            <span *ngIf="hasPerception(cell, Perception.BREEZE)" class="badge breeze" title="Sifflement du Puit">💨<span
+                class="badge-label">Sifflement</span></span>
+            <span *ngIf="hasPerception(cell, Perception.GLIMMER)" class="badge glimmer" title="Éclat d'Or">✨<span
+                class="badge-label">Éclat</span></span>
+            <span *ngIf="hasPerception(cell, Perception.BUMP)" class="badge bump" title="Choc contre un mur">💥<span
+                class="badge-label">Choc</span></span>
+            <span *ngIf="hasPerception(cell, Perception.SCREAM)" class="badge scream" title="Cri du Wumpus">😱<span
+                class="badge-label">Cri</span></span>
           </div>
         </div>
 
@@ -34,5 +42,50 @@
         </div>
       </div>
     </ng-container>
+  </div>
+
+  <!-- Légende : ce que signifient les icônes du jeu -->
+  <div class="legend">
+    <span class="legend-title">Légende</span>
+
+    <span class="legend-item" title="Case que vous n'avez pas encore visitée">
+      <span class="legend-icon">🌫️</span>
+      <span class="legend-label">Inexplorée</span>
+    </span>
+
+    <span class="legend-item" title="Case de départ : revenez-y pour fuir avec l'or">
+      <span class="legend-icon">🚩</span>
+      <span class="legend-label">Départ</span>
+    </span>
+
+    <span class="legend-item" title="Votre position et la direction que vous regardez">
+      <span class="legend-icon">🤖</span>
+      <span class="legend-label">Vous</span>
+    </span>
+
+    <span class="legend-item" title="Le Wumpus est sur cette case ou sur une case voisine">
+      <span class="legend-icon">🦨</span>
+      <span class="legend-label">Odeur</span>
+    </span>
+
+    <span class="legend-item" title="Un gouffre se trouve sur une case voisine">
+      <span class="legend-icon">💨</span>
+      <span class="legend-label">Sifflement</span>
+    </span>
+
+    <span class="legend-item" title="L'or est sur cette case">
+      <span class="legend-icon">✨</span>
+      <span class="legend-label">Éclat d'or</span>
+    </span>
+
+    <span class="legend-item" title="Un mur vous a empêché d'avancer">
+      <span class="legend-icon">💥</span>
+      <span class="legend-label">Choc</span>
+    </span>
+
+    <span class="legend-item" title="Votre flèche a tué le Wumpus">
+      <span class="legend-icon">😱</span>
+      <span class="legend-label">Cri</span>
+    </span>
   </div>
 </div>

@@ -13,7 +13,7 @@
   </div>
 
   <!-- Jeu vue -->
-  <div *ngIf="!loading && gameState" class="game-layout">
+  <div *ngIf="!loading && gameState" class="game-layout" [class.wumpus-shake]="wumpusFlash">
     <!-- Bannière de déconnexion WS -->
     <div *ngIf="!isConnected" class="offline-banner">
       ⚡ Connexion interrompue avec le serveur. Reconnexion en cours...
@@ -43,8 +43,8 @@
         </div>
 
         <div class="stat-item" title="Lingot d'or">
-          <span class="stat-icon">🪙</span>
-          <span class="stat-value">{{ gameState.playerState.hasGold ? '¡Recherché!' : 'Non récupéré' }}</span>
+          <span class="stat-icon">{{ gameState.playerState.hasGold ? '💰' : '📦' }}</span>
+          <span class="stat-value">{{ gameState.playerState.hasGold ? "Tu as l'or" : 'Vide' }}</span>
         </div>
       </div>
     </header>
@@ -52,9 +52,10 @@
     <!-- Grille de contenu principal -->
     <main class="main-content">
       <!-- Grille du jeu -->
-      <section class="board-section">
+      <section class="board-section" [class.gold-flash-active]="goldFlash" [class.wumpus-flash-active]="wumpusFlash">
         <app-board [boardSize]="gameState.boardSize" [playerState]="gameState.playerState"
-          [visitedPositions]="gameState.visitedPositions" [perceptions]="gameState.perceptions"></app-board>
+          [visitedPositions]="gameState.visitedPositions" [perceptions]="gameState.perceptions"
+          [startPosition]="gameState.startPosition"></app-board>
       </section>
 
       <!-- Panel Latéral (Contrôles et Journal) -->
@@ -65,6 +66,23 @@
         <app-log [message]="gameState.message"></app-log>
       </aside>
     </main>
+
+    <!-- Effet de flash doré  -->
+    <div *ngIf="goldFlash" class="gold-flash-overlay">
+      <div class="gold-flash-message">
+        <span class="gold-flash-icon">💰</span>
+        <span>Vous avez l'or !</span>
+      </div>
+    </div>
+
+    <!-- Alarma rouge quand le Wumpus meurt -->
+    <div *ngIf="wumpusFlash" class="wumpus-flash-overlay">
+      <div class="wumpus-flash-message">
+        <span class="wumpus-flash-icon">💀</span>
+        <span>Wumpus tué !</span>
+      </div>
+      <div class="wumpus-flash-claws">🩸</div>
+    </div>
 
     <!-- Fenêtre modale de fin de partie / Banner -->
     <div *ngIf="gameState.status !== GameStatus.PLAYING" class="modal-overlay">
